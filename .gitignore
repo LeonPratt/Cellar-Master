@@ -1,0 +1,5 @@
+server/pem/
+server/.env
+.env
+server/uploads/
+test_photos/

@@ -4,13 +4,18 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from datetime import datetime, timedelta
 from pathlib import Path
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-base = Path(__file__).resolve().parent
+base = os.environ.get("PEM_PATH")
+print(base)
+#base = Path(__file__).resolve().parent
 key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 subject = issuer = x509.Name([
-    x509.NameAttribute(NameOID.COUNTRY_NAME, 'US'),
-    x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, 'California'),
-    x509.NameAttribute(NameOID.LOCALITY_NAME, 'San Francisco'),
+    x509.NameAttribute(NameOID.COUNTRY_NAME, 'UK'),
+    x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, 'Cambridgeshire'),
+    x509.NameAttribute(NameOID.LOCALITY_NAME, 'Cambridge'),
     x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'Vinum'),
     x509.NameAttribute(NameOID.COMMON_NAME, 'localhost'),
 ])
@@ -26,9 +31,9 @@ cert = (
     .sign(key, hashes.SHA256())
 )
 
-with open(base / 'cert.pem', 'wb') as f:
+with open(f"{base}/cert.pem", 'wb') as f:
     f.write(cert.public_bytes(serialization.Encoding.PEM))
-with open(base / 'key.pem', 'wb') as f:
+with open(f"{base}/key.pem", 'wb') as f:
     f.write(key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
