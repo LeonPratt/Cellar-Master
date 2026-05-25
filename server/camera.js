@@ -120,6 +120,16 @@ function capturePhoto() {
     }
 
     capturedBlob = blob;
+    let video = document.getElementById("previewVideo")
+    video.style.visibility = "hidden";
+
+    let postCaptureImage = document.getElementById("PostCaptureImage");
+    postCaptureImage.src = URL.createObjectURL(capturedBlob);
+    postCaptureImage.style.display = "flex";
+
+    let div = document.getElementById("overlayDiv");
+    div.style.display = "flex";
+
     updateStatus('Photo captured. Sending to server...');
     captureButton.disabled = true;
     await sendPhoto();

@@ -139,11 +139,22 @@
         height: 76px;
       }
     }
+    #overlayDifv {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5); /* translucent grey */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    }
   </style>
 </head>
 <body>
-  <video id="previewVideo" playsinline autoplay muted></video>
-
+  <video id="previewVideo" playsinline autoplay muted visible ></video>
+  <div id="overlayDiv">
+      <img id ="PostCaptureImage" style="display: none;"></img>
+  </div>
   <div class="overlay">
     <div class="top-bar">
       <div id="statusText">Initializing camera…</div>
