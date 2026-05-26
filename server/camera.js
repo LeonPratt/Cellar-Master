@@ -130,6 +130,8 @@ function capturePhoto() {
     let div = document.getElementById("overlayDiv");
     div.style.display = "flex";
 
+    captureButton.style.display = "none";
+    switchCameraButton.style.display = "none";
     updateStatus('Photo captured. Sending to server...');
     captureButton.disabled = true;
     await sendPhoto();
@@ -158,7 +160,18 @@ async function sendPhoto() {
     }
 
     const result = await response.json().catch(() => null);
+
+
     updateStatus(result?.message || 'Photo uploaded successfully.');
+
+    const url = new URL(window.location.href);
+
+    url.pathname += "/verify/";
+    url.searchParams.set("img", result.filename);
+    url.searchParams.set("name", result.name);
+    url.searchParams.set("status", "success");
+
+    window.location.href = url.toString();
   } catch (error) {
     updateStatus(`Upload failed: ${error.message}`, true);
   }

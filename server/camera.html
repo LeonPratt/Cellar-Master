@@ -98,7 +98,7 @@
     #switchCameraButton img {
       width: 22px;
       height: 22px;
-      filter: invert(100%);
+      mix-blend-mode: multiply;
     }
 
     #captureButton {
@@ -139,7 +139,7 @@
         height: 76px;
       }
     }
-    #overlayDifv {
+    #overlayDiv {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5); /* translucent grey */
@@ -148,13 +148,37 @@
     justify-content: center;
     z-index: 999;
     }
+
+    /* HTML: <div class="loader"></div> */
+  .loader {
+    width: 50px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid;
+    border-color: #000 #0000;
+    animation: l1 1s infinite;
+  }
+  @keyframes l1 {to{transform: rotate(.5turn)}}
+
+  /* HTML: <div class="loader"></div> */
+  .loader {
+    width: 50px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid;
+    border-color: #ffffff #0000;
+    animation: l1 1s infinite;
+  }
+  @keyframes l1 {to{transform: rotate(.5turn)}}
   </style>
 </head>
 <body>
   <video id="previewVideo" playsinline autoplay muted visible ></video>
   <div id="overlayDiv">
-      <img id ="PostCaptureImage" style="display: none;"></img>
+    <div class= "loader"></div>
   </div>
+  <img id ="PostCaptureImage" style="display: none;"></img>
+
   <div class="overlay">
     <div class="top-bar">
       <div id="statusText">Initializing camera…</div>

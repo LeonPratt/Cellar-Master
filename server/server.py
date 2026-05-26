@@ -20,19 +20,13 @@ app = Flask(__name__)
 def index():
     return send_from_directory(BASE_DIR, 'home.html')
 
-@app.route('/verify')
+@app.route('/camera/verify/')
 def verify():
     return send_from_directory(BASE_DIR, 'verify.html')
 
-@app.route('/verify.js')
+@app.route('/camera/verify/verify.js')
 def verify_js():
     return send_from_directory(BASE_DIR, 'verify.js')
-
-
-@app.route('/verify/<path:name>')
-def verify_img(name):
-    return send_from_directory(BASE_DIR+"\\uploads",name)
-
 
 @app.route('/camera')
 def camera_page():
@@ -64,11 +58,27 @@ def upload_photo():
     save_path = UPLOAD_DIR / save_name
     photo.save(save_path)
 
-    return jsonify({'message': 'Photo saved successfully.', 'filename': save_name})
+    return jsonify({'message': 'Photo saved successfully.', 'filename': save_name.split(".png")[0], 'name':"test wine name"})
 
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
     return send_from_directory(UPLOAD_DIR, filename)
+
+
+@app.route('/add-to-cellar', methods=['POST'])
+def add():
+    data = request.get_json()
+    print("added")
+    print(data)
+    return jsonify({"status": "added", "data": data})
+
+
+@app.route('/remove-from-cellar', methods=['POST'])
+def remove():
+    data = request.get_json()
+    print("removed")
+    print(data)
+    return jsonify({"status": "removed", "data": data})
 
 if __name__ == '__main__':
     cert_path = f"{PEM_PATH}/cert.pem"

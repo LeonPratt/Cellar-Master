@@ -35,17 +35,11 @@
     .background {
       position: fixed;
       inset: 0;
-
-      /* Placeholder background */
-      background:
-        linear-gradient(
-          135deg,
-          #d8d8d8,
-          #f2f2f2
-        );
-
+      filter:blur(3px);
+      background-image: none;
       background-size: cover;
       background-position: center;
+      background-repeat: no-repeat;
     }
 
     /* Dark overlay for readability */
@@ -71,28 +65,47 @@
     /* Form card */
     .form-card {
 
-      width:
-        min(90vw, 380px);
+      width: min(90vw, 380px);
 
       background: rgba(255,255,255,0.96);
 
-      border-radius:
-        clamp(28px, 5vw, 36px);
+      border-radius: clamp(28px, 5vw, 36px);
 
-      padding:
-        clamp(28px, 5vw, 42px);
+      padding: clamp(28px, 5vw, 42px);
 
       display: flex;
       flex-direction: column;
-      gap:
-        clamp(18px, 3vw, 24px);
+
+      gap: clamp(18px, 3vw, 24px);
 
       backdrop-filter: blur(8px);
 
       box-shadow:
         0 10px 40px rgba(0,0,0,0.12);
+
+      /* Initial state */
+      opacity: 0;
+      transform: translateY(120px) scale(0.96);
+
+      /* Smooth modern animation */
+      animation:
+        slideFadeIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
+    /* Animation */
+    @keyframes slideFadeIn {
+
+      from {
+        opacity: 0;
+        transform: translateY(120px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+    }
     /* Inputs */
     .input-field {
 
@@ -172,6 +185,25 @@
       transform: translateY(0);
     }
 
+    /* Button row */
+    .button-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    /* Make buttons fit side by side */
+    .button-row .submit-btn {
+      flex: 1;
+      margin-top: 8px;
+
+      height: clamp(48px, 8vw, 56px);
+
+      font-size: clamp(13px, 2vw, 16px);
+
+      padding: 0 10px;
+    }
+
     /* Mobile adjustments */
     @media (max-height: 700px) {
 
@@ -190,44 +222,35 @@
 
 <body>
 
-  <div class="background"></div>
+  <div id="bgimage" class="background" ></div>
   <div class="overlay"></div>
 
   <main class="container">
 
-    <form class="form-card">
+    <form class="form-card" id="wine-form">
 
-      <input
-        type="text"
-        class="input-field"
-        placeholder="Wine Name"
-      >
+      <input type="text" class="input-field" placeholder="Wine Name" name="wine">
 
-      <input
-        type="text"
-        class="input-field"
-        placeholder="Grape(s)"
-      >
+      <input type="text" class="input-field" placeholder="Grape(s)" name="grapes">
 
-      <input
-        type="text"
-        class="input-field"
-        placeholder="Region"
-      >
+      <input type="text" class="input-field" placeholder="Region" name="region">
 
-      <input
-        type="text"
-        class="input-field"
-        placeholder="Year"
-      >
+      <input type="text" class="input-field" placeholder="Year" name = "year">
 
-      <button class="submit-btn">
-        Submit
-      </button>
+      <input type="text" class="input-field" placeholder="Quantity" name = "quantity">
 
-    </form>
+      <div class="button-row">
+        <button class="submit-btn" id="add">
+          Add to cellar
+        </button>
 
+        <button class="submit-btn" id="remove">
+          Remove from cellar
+        </button>
+      </div></form>
+    <script src="verify.js"></script>
   </main>
+
 
 </body>
 </html>
