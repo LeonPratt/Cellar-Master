@@ -9,8 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 base = os.environ.get("PEM_PATH")
-print(base)
-#base = Path(__file__).resolve().parent
+
 key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 subject = issuer = x509.Name([
     x509.NameAttribute(NameOID.COUNTRY_NAME, 'UK'),
@@ -39,5 +38,3 @@ with open(f"{base}/key.pem", 'wb') as f:
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
     ))
-
-print('cert.pem and key.pem created at', base)

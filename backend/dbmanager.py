@@ -1,7 +1,7 @@
 import sqlite3
 import os
 import dotenv
-dotenv.load_dotenv()
+dotenv.load_dotenv(r"C:\Users\leona\OneDrive\Documents\GitHub\vinum\.env")
 
 DB_DIR = os.environ.get("DB_DIR")
 
@@ -57,13 +57,13 @@ def wine_exists(conn, name, year):
     row = cur.fetchone()
     return row[0] if row else None
 
-def remove_wine_from_cellar(conn, wineid:int):
+def remove_wine_from_cellar(conn, wineid:int, quantity:int):
     cur = conn.cursor()
     cur.execute(
-        "UPDATE CELLAR SET quantity = quantity - 1 WHERE wineid = ?;",
-        (wineid,))
+        "UPDATE CELLAR SET quantity = quantity - ? WHERE wineid = ?;",
+        (quantity, wineid))
     cur.execute(
-        "DELETE FROM CELLAR WHERE wineid = ? AND quantity = 0;",
+        "DELETE FROM CELLAR WHERE wineid = ? AND quantity <= 0;",
         (str(wineid),))
     conn.commit()
 
@@ -75,9 +75,32 @@ def get_qty_in_cellar(conn,wineid:int):
         """,(wineid,)
     )
     qty = cur.fetchone()
-    return qty[0]
+    if qty:
+        return qty[0]
+    else:
+        return 0
 
-def insert_wine(conn, data: dict):
+def insert_preexisting_wine(conn,wineid:int, qty:int):
+
+    cur_qty = get_qty_in_cellar(conn, wineid)
+    cur = conn.cursor()
+    if cur_qty == 0:
+        cur.execute(
+            """
+            INSERT INTO CELLAR (wineid, quantity) VALUES (?,?)
+            """,(wineid, qty)
+        )
+        conn.commit()
+    else:
+        cur.execute(
+            """
+            UPDATE CELLAR SET quantity = quantity + ? WHERE wineid = ?;
+        """,(qty, wineid)
+        )
+        conn.commit()
+    return True
+
+def insert_new_wine(conn, data: dict):
     """
     Expected dict format:
     {
@@ -85,47 +108,33 @@ def insert_wine(conn, data: dict):
         year: int,
         grape_variety: list[str],
         region: str,
-        tasting_notes: list[str],
+        tasting_notes: str,
         food_pairings: list[str],
         drink_window_start: int,
         drink_window_end: int,
-        wine_notes: list[str]
+        wine_notes: list[str].
+        quantity: int
     }
     """
 
     cur = conn.cursor()
-    is_new_wine = False
 
-    existing_id = wine_exists(conn, data["name"], data["year"])
+    cur.execute("""
+        INSERT INTO wines (name, year, region, tasting_notes)
+        VALUES (?, ?, ?, ?)
+    """, (
+        data["name"],
+        data["year"],
+        data["region"],
+        data["tasting_notes"]
+    ))
 
-    if existing_id:
-        wineid = existing_id
+    wineid = cur.lastrowid
 
-        cur.execute("""
-            UPDATE CELLAR
-            SET quantity = quantity + 1
-            WHERE wineid = ?;
-        """, (wineid,))
-    else:
-        is_new_wine = True
-        tasting_notes_text = " | ".join(data.get("tasting_notes", []))
-
-        cur.execute("""
-            INSERT INTO wines (name, year, region, tasting_notes)
-            VALUES (?, ?, ?, ?)
-        """, (
-            data["name"],
-            data["year"],
-            data["region"],
-            tasting_notes_text
-        ))
-
-        wineid = cur.lastrowid
-
-        cur.execute("""
-            INSERT INTO CELLAR (wineid, quantity)
-            VALUES (?, 1)
-        """, (wineid,))
+    cur.execute("""
+        INSERT INTO CELLAR (wineid, quantity)
+        VALUES (?, ?)
+    """, (wineid,data["quantity"]))
 
 
     cur.execute("""
@@ -153,12 +162,12 @@ def insert_wine(conn, data: dict):
             INSERT OR IGNORE INTO wine_pairings (wineid, pairingid)
             VALUES (?, ?)
         """, (wineid, pairing_id))
-    if is_new_wine:
-        for note in data.get("wine_notes", []):
-            cur.execute("""
-                INSERT INTO wine_notes (wineid, note)
-                VALUES (?, ?)
-            """, (wineid, note))
+
+    for note in data.get("wine_notes", []):
+        cur.execute("""
+            INSERT INTO wine_notes (wineid, note)
+            VALUES (?, ?)
+        """, (wineid, note))
 
     conn.commit()
     return wineid
@@ -191,22 +200,24 @@ if __name__ == "__main__":
     conn = connect()
 
     wine_data = {
-        "name": "Campo viejo",
-        "year": 2025,
-        "grape_variety": ["rioja"],
-        "region": "Rioja Alta",
-        "tasting_notes": ["vanilla", "oak", "coconut"],
-        "food_pairings": ["pizza", "something"],
-        "drink_window_start": 2026,
-        "drink_window_end": 2027,
+        "name": "The Virgilius",
+        "year": 2001,
+        "grape_variety": ["Viognier"],
+        "region": "Eden Valley",
+        "tasting_notes": "peach stone|floral lavender|honey butter|oak vanilla",
+        "food_pairings": ["grilled chicken","roasted fish","smoked salmon","sea bass"],
+        "drink_window_start": 2003,
+        "drink_window_end": 2008,
         "wine_notes": [
-            "very good value",
-            "lots of oak incorporation"
-        ]
+            "very creamy",
+            "lackluster on the nose"
+        ],
+        "quantity":3
     }
 
-    #wine_id = insert_wine(conn, wine_data)
-    remove_wine_from_cellar(conn,2)
+    wine_id = insert_new_wine(conn, wine_data)
+    
+    #remove_wine_from_cellar(conn,2)
     conn.close()
 
     #print("Inserted/updated wine ID:", wine_id)

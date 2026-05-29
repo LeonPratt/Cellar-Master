@@ -165,10 +165,13 @@ async function sendPhoto() {
     updateStatus(result?.message || 'Photo uploaded successfully.');
 
     const url = new URL(window.location.href);
-
+    console.log(result)
     url.pathname += "/verify/";
     url.searchParams.set("img", result.filename);
     url.searchParams.set("name", result.name);
+    url.searchParams.set("grape_variety", result.grape_variety);
+    url.searchParams.set("region", result.region);
+    url.searchParams.set("year", result.year);
     url.searchParams.set("status", "success");
 
     window.location.href = url.toString();

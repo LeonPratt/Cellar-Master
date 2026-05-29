@@ -6,10 +6,10 @@ if (filename) {
   container.style.backgroundImage = `url(/uploads/${filename}.png)`;
 }
 
-document.querySelector('input[name="wine"]').value = params.get("name") || "";
-document.querySelector('input[name="grapes"]').value = params.get("name") || "";
-document.querySelector('input[name="region"]').value = params.get("name") || "";
-document.querySelector('input[name="year"]').value = params.get("name") || "";
+document.querySelector('input[name="name"]').value = params.get("name") || "";
+document.querySelector('input[name="grape_variety"]').value = params.get("grape_variety") || "";
+document.querySelector('input[name="region"]').value = params.get("region") || "";
+document.querySelector('input[name="year"]').value = params.get("year") || "";
 
 
 
@@ -20,7 +20,7 @@ function getFormData() {
 }
 
 document.getElementById("add").addEventListener("click", async (e) => {
-  e.preventDefault(); // stops page reload
+  e.preventDefault();
 
   const res = await fetch("/add-to-cellar", {
     method: "POST",
@@ -29,10 +29,12 @@ document.getElementById("add").addEventListener("click", async (e) => {
   });
 
   console.log(await res.json());
+
+  window.location.href = ("/")
 });
 
 document.getElementById("remove").addEventListener("click", async (e) => {
-  e.preventDefault(); // stops page reload
+  e.preventDefault();
 
   const res = await fetch("/remove-from-cellar", {
     method: "POST",
@@ -41,4 +43,6 @@ document.getElementById("remove").addEventListener("click", async (e) => {
   });
 
   console.log(await res.json());
+  window.location.href = ("/")
+
 });
