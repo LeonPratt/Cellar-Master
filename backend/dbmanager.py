@@ -172,7 +172,7 @@ def insert_new_wine(conn, data: dict):
     conn.commit()
     return wineid
 
-def get_all_pairings_from_wine(conn, wineid:int):
+def get_all_pairings_from_wineid(conn, wineid:int):
     cur = conn.cursor()
     cur.execute("SELECT pairingid FROM wine_pairings WHERE wineid = ?", (wineid))
     pairingIDs = cur.fetchall()
@@ -195,6 +195,84 @@ def get_all_wineids_from_pairing(conn, pairing):
     cur.execute("SELECT wineid FROM WINE_PAIRINGS WHERE pairingid = ?;",(str(pairingid[0]),))
     wineids = cur.fetchall()
     return [x[0] for x in wineids]
+
+
+def search_wines(conn, search_term="", limit=10):
+    """
+    Search wines by name, region, or grape name.
+
+    Returns:
+        [
+            {
+                "wineid": int,
+                "name": str,
+                "year": int,
+                "region": str,
+                "grapes": [str, str, ...]
+            },
+            ...
+        ]
+    """
+
+    cursor = conn.cursor()
+
+    if search_term.strip() == "":
+        query = """
+        SELECT
+            w.wineid,
+            w.name,
+            w.year,
+            w.region,
+            GROUP_CONCAT(g.name) AS grapes
+        FROM WINES w
+        LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
+        LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
+        GROUP BY w.wineid
+        ORDER BY w.wineid
+        LIMIT ?
+        """
+
+        cursor.execute(query, (limit,))
+
+    else:
+        search = f"%{search_term}%"
+
+        query = """
+        SELECT
+            w.wineid,
+            w.name,
+            w.year,
+            w.region,
+            GROUP_CONCAT(DISTINCT g.name) AS grapes
+        FROM WINES w
+        LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
+        LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
+        WHERE
+            w.name LIKE ?
+            OR w.region LIKE ?
+            OR g.name LIKE ?
+        GROUP BY w.wineid
+        ORDER BY w.wineid
+        LIMIT ?
+        """
+
+        cursor.execute(query, (search, search, search, limit))
+
+    rows = cursor.fetchall()
+
+    wines = []
+
+    for row in rows:
+        wines.append({
+            "wineid": row[0],
+            "name": row[1],
+            "year": row[2],
+            "region": row[3],
+            "grapes": row[4].split(",") if row[4] else []
+        })
+
+    return wines
+
 
 if __name__ == "__main__":
     conn = connect()

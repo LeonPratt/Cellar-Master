@@ -5,12 +5,11 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 
-from backend import infer_wine_details
-
+from backend import infer_wine_details, dbmanager
 
 import os
 from dotenv import load_dotenv
-load_dotenv("C:\\Users\\leona\\OneDrive\\Documents\\GitHub\\vinum\\.env")
+load_dotenv(r"C:\Users\Leon\OneDrive\Documents\GitHub\vinum\.env")
 
 PEM_PATH = os.environ.get("PEM_PATH")
 print(PEM_PATH)
@@ -27,6 +26,29 @@ def index():
 @app.route('/home.js')
 def home_js():
     return send_from_directory(BASE_DIR, 'home.js')
+
+@app.route('/logo.svg')
+def logo():
+    return send_from_directory(BASE_DIR, 'logo.svg')
+
+@app.route('/searchicon.svg')
+def searchicon():
+    return send_from_directory(BASE_DIR, 'searchicon.svg')
+
+
+@app.route('/search')
+def search_wines():
+    return send_from_directory(BASE_DIR, 'searchwine.html')
+
+@app.route('/searchwine.js')
+def search_wines_js():
+    return send_from_directory(BASE_DIR, 'searchwine.js')
+
+@app.route('/wines')
+def getwines():
+    conn = dbmanager.connect()
+    res = dbmanager.search_wines(conn, '', limit = 5)
+    return jsonify({'wines':res})
 
 
 @app.route('/camera/verify/')
@@ -105,7 +127,7 @@ def remove():
 
 
 if __name__ == '__main__':
-    cert_path = f"{PEM_PATH}/cert.pem"
-    key_path = f"{PEM_PATH}/key.pem"
+    cert_path = f"{PEM_PATH}\\cert.pem"
+    key_path = f"{PEM_PATH}\\key.pem"
     ssl_context = (str(cert_path), str(key_path))
     app.run(host='0.0.0.0', port=5000, debug=True, ssl_context=ssl_context)

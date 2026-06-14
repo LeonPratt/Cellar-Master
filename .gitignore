@@ -1,5 +1,4 @@
-server/pem/
-server/.env
+./pem/
 .env
-server/uploads/
+./uploads/
 test_photos/
