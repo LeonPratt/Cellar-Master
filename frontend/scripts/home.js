@@ -9,7 +9,7 @@ add_remove.addEventListener("click",function(){
 
 
 search_pairing.addEventListener("click",function(){
-    window.location.href = "/search"
+    window.location.href = "/parings"
 })
 
 

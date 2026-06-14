@@ -23,7 +23,7 @@
       font-family:'Montserrat', sans-serif;
     }
 
-    .phone{
+    .main{
       width:100vw;
       height:100vh;
       overflow:hidden;
@@ -48,7 +48,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      gap:3.5%;
+      gap:0%;
 
       cursor:pointer;
     }
@@ -168,33 +168,6 @@
       position:relative;
     }
 
-    .search-icon::before{
-      content:"";
-      position:absolute;
-      width:26px;
-      height:26px;
-      border:5px solid currentColor;
-      border-radius:50%;
-      top:0;
-      left:0;
-    }
-
-    .search-icon::after{
-      content:"";
-      position:absolute;
-      width:5px;
-      height:20px;
-      background:currentColor;
-      transform:rotate(-45deg);
-      bottom:-4px;
-      right:0px;
-      border-radius:4px;
-    }
-
-    .blue .search-icon{
-      color:#2f35d3;
-    }
-
     .yellow .search-icon{
       color:#c8ac1f;
     }
@@ -203,15 +176,13 @@
 </head>
 <body>
 
-  <div class="phone">
+  <div class="main">
 
     <!-- CellarMaster Button -->
     <button class="top-bar">
-
-      <!-- Temporary Emoji Logo -->
-      <div style="font-size:38px;">🍇</div>
-
-      <h1>CellarMaster</h1>
+        <img src="/assets/icons/logo.svg" alt="Wine Icon" />
+        <h1>CellarMaster</h1>
+      
     </button>
 
     <div class="panel">
@@ -229,7 +200,8 @@
 
       <!-- Search My Wines -->
       <button class="menu-btn blue" id="search_wine">
-        <div class="icon search-icon"></div>
+        <img class = "icon search-icon" src="/assets/icons/wine-search-icon.svg" alt="Search Icon">
+
 
         <div>
           SEARCH<br>
@@ -240,7 +212,8 @@
 
       <!-- Search Food Pairings -->
       <button class="menu-btn yellow" id ="search_pairing">
-        <div class="icon search-icon"></div>
+        <img class = "icon search-icon" src="/assets/icons/food-pairing-icon.svg" alt="Search Icon">
+        
 
         <div>
           SEARCH<br>

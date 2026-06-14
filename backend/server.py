@@ -37,6 +37,10 @@ def search_wines():
     return send_page("searchwine.html")
 
 
+@app.route("/pairings")
+def search_pairings():
+    return send_page("pairings.html")
+
 @app.route("/camera")
 def camera_page():
     return send_page("camera.html")

@@ -1,29 +1,19 @@
-// ===============================
-// CONFIG
-// ===============================
 
 const API_URL = "/wines";
-
-
-// ===============================
-// ELEMENTS
-// ===============================
 
 const wineList = document.querySelector(".wine-list");
 const searchBox = document.querySelector(".search-box");
 const searchButton = document.querySelector(".search-btn");
 
 
-// ===============================
-// STATE
-// ===============================
+let homeButton = document.querySelector(".nav-btn");
+
+homeButton.addEventListener("click", () => {
+    window.location.href = "/";
+})
+
 
 let wines = [];
-
-
-// ===============================
-// FETCH WINES
-// ===============================
 
 async function fetchWines() {
 
@@ -63,10 +53,6 @@ async function fetchWines() {
     }
 }
 
-
-// ===============================
-// RENDER WINES
-// ===============================
 
 function renderWines(wineArray) {
 
@@ -123,10 +109,6 @@ function renderWines(wineArray) {
             </div>
         `;
 
-        // ===============================
-        // VIEW BUTTON
-        // ===============================
-
         const viewButton = wineCard.querySelector(".view-btn");
 
         viewButton.addEventListener("click", () => {
@@ -137,10 +119,6 @@ function renderWines(wineArray) {
             // window.location.href = `/wine.html?id=${wine.id}`;
         });
 
-
-        // ===============================
-        // REMOVE BUTTON
-        // ===============================
 
         const removeButton = wineCard.querySelector(".delete-btn");
 
@@ -176,11 +154,6 @@ function searchWines() {
     renderWines(filteredWines);
 }
 
-
-// ===============================
-// REMOVE WINE
-// ===============================
-
 async function removeWine(wineName) {
 
     try {
@@ -211,11 +184,6 @@ async function removeWine(wineName) {
     }
 }
 
-
-// ===============================
-// HELPER FUNCTION
-// ===============================
-
 function capitalize(text) {
 
     return text
@@ -230,10 +198,5 @@ function capitalize(text) {
 searchButton.addEventListener("click", searchWines);
 
 searchBox.addEventListener("input", searchWines);
-
-
-// ===============================
-// INITIAL LOAD
-// ===============================
 
 fetchWines();

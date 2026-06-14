@@ -1,5 +1,6 @@
 const params = new URLSearchParams(window.location.search);
 const filename = params.get("img");
+
 console.log("filename: " + filename);
 if (filename) {
   const container = document.getElementById("bgimage");
