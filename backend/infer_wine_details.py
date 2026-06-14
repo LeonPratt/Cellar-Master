@@ -1,10 +1,14 @@
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
-load_dotenv(r"C:\Users\leona\OneDrive\Documents\GitHub\vinum\.env")
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(ROOT_DIR / ".env")
 
 import sys
 import json
-from backend import dbmanager
+import dbmanager
 
 from ollama import chat, web_fetch, web_search, Client
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")

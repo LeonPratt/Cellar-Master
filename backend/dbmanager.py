@@ -1,7 +1,11 @@
 import sqlite3
 import os
+from pathlib import Path
+
 import dotenv
-dotenv.load_dotenv(r"C:\Users\leona\OneDrive\Documents\GitHub\vinum\.env")
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+dotenv.load_dotenv(ROOT_DIR / ".env")
 
 DB_DIR = os.environ.get("DB_DIR")
 
