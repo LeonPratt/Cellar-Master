@@ -22,11 +22,15 @@ function getFormData() {
 
 document.getElementById("add").addEventListener("click", async (e) => {
   e.preventDefault();
+  let data = getFormData();
+  data.imgpath = params.get("img");
+
+  console.log("data: " + JSON.stringify(data));
 
   const res = await fetch("/add-to-cellar", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(getFormData())
+    body: JSON.stringify(data)
   });
 
   console.log(await res.json());

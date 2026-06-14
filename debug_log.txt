@@ -1,0 +1,86 @@
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:09:36.8488199Z' done=True done_reason='stop' total_duration=5776103900 load_duration=935293400 prompt_eval_count=391 prompt_eval_duration=333463000 eval_count=58 eval_duration=4451181000 message=Message(role='assistant', content='```json\n{\n  "name": "CADUS Valle de Uco Tupungato Malbec",\n  "year": "unknown",\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "CADUS Valle de Uco Tupungato Malbec",
+  "year": "unknown",
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:10:22.9126405Z' done=True done_reason='stop' total_duration=10082855500 load_duration=1055896500 prompt_eval_count=391 prompt_eval_duration=3305263000 eval_count=71 eval_duration=5455948000 message=Message(role='assistant', content='This image shows a person\'s face, not a wine bottle. Therefore, I cannot extract the requested information about the wine.\n\n```json\n{\n  "name": "unknown",\n  "year": 0,\n  "grape_variety": "unknown",\n  "region": "unknown"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: This image shows a person's face, not a wine bottle. Therefore, I cannot extract the requested information about the wine.
+
+```json
+{
+  "name": "unknown",
+  "year": 0,
+  "grape_variety": "unknown",
+  "region": "unknown"
+}
+```
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:11:27.5988003Z' done=True done_reason='stop' total_duration=6045766700 load_duration=1019874300 prompt_eval_count=391 prompt_eval_duration=353891000 eval_count=58 eval_duration=4448853000 message=Message(role='assistant', content='```json\n{\n  "name": "CADUS Valle de Uco Tupungato Malbec",\n  "year": 0,\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "CADUS Valle de Uco Tupungato Malbec",
+  "year": 0,
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```
+Received data: {'name': 'CADUS Valle de Uco Tupungato Malbec', 'grape_variety': 'Malbec', 'region': 'Mendoza - Argentina', 'year': '0', 'quantity': '3', 'imgpath': '20260615_001121_photo'}
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:12:07.4506128Z' done=True done_reason='stop' total_duration=5986957000 load_duration=965143100 prompt_eval_count=391 prompt_eval_duration=434258000 eval_count=59 eval_duration=4532999000 message=Message(role='assistant', content='```json\n{\n  "name": "CADUS VALLE DE UCO Tupungato Malbec",\n  "year": "unknown",\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "CADUS VALLE DE UCO Tupungato Malbec",
+  "year": "unknown",
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:13:14.4523077Z' done=True done_reason='stop' total_duration=5876037900 load_duration=982619500 prompt_eval_count=391 prompt_eval_duration=324362000 eval_count=59 eval_duration=4517384000 message=Message(role='assistant', content='```json\n{\n  "name": "CADUS VALLE DE UCO Tupungato Malbec",\n  "year": "unknown",\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "CADUS VALLE DE UCO Tupungato Malbec",
+  "year": "unknown",
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:13:36.3293221Z' done=True done_reason='stop' total_duration=6019294700 load_duration=1055036300 prompt_eval_count=391 prompt_eval_duration=461858000 eval_count=58 eval_duration=4448720000 message=Message(role='assistant', content='```json\n{\n  "name": "CADUS Valle de Uco Tupungato Malbec",\n  "year": "unknown",\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "CADUS Valle de Uco Tupungato Malbec",
+  "year": "unknown",
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:14:03.4629264Z' done=True done_reason='stop' total_duration=7701781500 load_duration=1005323300 prompt_eval_count=391 prompt_eval_duration=3126673000 eval_count=43 eval_duration=3283133000 message=Message(role='assistant', content="I'm sorry, but I cannot fulfill this request because the image you provided shows a person's face and not a wine bottle. Therefore, I am unable to extract the requested information about the wine.", thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: I'm sorry, but I cannot fulfill this request because the image you provided shows a person's face and not a wine bottle. Therefore, I am unable to extract the requested information about the wine.
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:16:39.1287357Z' done=True done_reason='stop' total_duration=5948138600 load_duration=949912200 prompt_eval_count=391 prompt_eval_duration=323936000 eval_count=58 eval_duration=4458795000 message=Message(role='assistant', content='```json\n{\n  "name": "Cadus Valle de Uco Tupungato Malbec",\n  "year": "unknown",\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "Cadus Valle de Uco Tupungato Malbec",
+  "year": "unknown",
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:16:56.6674874Z' done=True done_reason='stop' total_duration=5919174500 load_duration=1056073400 prompt_eval_count=391 prompt_eval_duration=395090000 eval_count=58 eval_duration=4413662000 message=Message(role='assistant', content='```json\n{\n  "name": "CADUS Valle de Uco Tupungato Malbec",\n  "year": "unknown",\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "CADUS Valle de Uco Tupungato Malbec",
+  "year": "unknown",
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```
+Unparsed response: model='gemma3:4b' created_at='2026-06-14T23:17:18.2896165Z' done=True done_reason='stop' total_duration=5918673100 load_duration=1024145300 prompt_eval_count=391 prompt_eval_duration=392872000 eval_count=58 eval_duration=4446842000 message=Message(role='assistant', content='```json\n{\n  "name": "CADUS Valle de Uco Tupungato Malbec",\n  "year": 0,\n  "grape_variety": "Malbec",\n  "region": "Mendoza - Argentina"\n}\n```', thinking=None, images=None, tool_name=None, tool_calls=None) logprobs=None
+Parsed response: ```json
+{
+  "name": "CADUS Valle de Uco Tupungato Malbec",
+  "year": 0,
+  "grape_variety": "Malbec",
+  "region": "Mendoza - Argentina"
+}
+```

@@ -2,3 +2,5 @@
 .env
 ./uploads/
 test_photos/
+/uploads/
+/.VSCodeCounter/

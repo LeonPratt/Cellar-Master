@@ -1,24 +1,46 @@
-
 const API_URL = "/wines";
 
 const wineList = document.querySelector(".wine-list");
 const searchBox = document.querySelector(".search-box");
 const searchButton = document.querySelector(".search-btn");
-
-
-let homeButton = document.querySelector(".nav-btn");
-
-homeButton.addEventListener("click", () => {
-    window.location.href = "/";
-})
-
+const homeButton = document.querySelector(".nav-btn");
 
 let wines = [];
 
+homeButton.addEventListener("click", () => {
+    window.location.href = "/";
+});
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function capitalize(text) {
+    return String(text ?? "")
+        .split(" ")
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+}
+
+function renderMessage(title, detail = "") {
+    wineList.innerHTML = `
+        <div class="wine-card">
+            <div class="wine-info">
+                <div class="wine-name">${escapeHtml(title)}</div>
+                ${detail ? `<div class="wine-details">${escapeHtml(detail)}</div>` : ""}
+            </div>
+        </div>
+    `;
+}
+
 async function fetchWines() {
-
     try {
-
         const response = await fetch(API_URL);
 
         if (!response.ok) {
@@ -26,128 +48,72 @@ async function fetchWines() {
         }
 
         const data = await response.json();
-        console.log(data);
-        wines = data.wines;
-
-
+        wines = data.wines || [];
         renderWines(wines);
-
     }
     catch (error) {
-
         console.error(error);
-
-        wineList.innerHTML = `
-            <div class="wine-card">
-                <div class="wine-info">
-                    <div class="wine-name">
-                        Failed to load wines
-                    </div>
-
-                    <div class="wine-details">
-                        Please check server connection
-                    </div>
-                </div>
-            </div>
-        `;
+        renderMessage("Failed to load wines", "Please check server connection.");
     }
 }
 
-
 function renderWines(wineArray) {
-
     wineList.innerHTML = "";
 
     if (wineArray.length === 0) {
-
-        wineList.innerHTML = `
-            <div class="wine-card">
-                <div class="wine-info">
-                    <div class="wine-name">
-                        No wines found
-                    </div>
-                </div>
-            </div>
-        `;
-
+        renderMessage("No wines found");
         return;
     }
 
     wineArray.forEach((wine) => {
+        const grapes = Array.isArray(wine.grapes) && wine.grapes.length > 0
+            ? wine.grapes.map(capitalize).join(" / ")
+            : "Grape unknown";
 
         const wineCard = document.createElement("div");
-
         wineCard.className = "wine-card";
 
         wineCard.innerHTML = `
             <div class="wine-info">
-
-                <div class="wine-name">
-                    ${wine.name}
-                </div>
-
+                <div class="wine-name">${escapeHtml(wine.name)}</div>
                 <div class="wine-details">
-                    ${capitalize(wine.grapes[0])}
-                    •
-                    ${wine.region}
-                    •
-                    ${wine.year}
+                    ${escapeHtml(grapes)}
+                    &bull;
+                    ${escapeHtml(wine.region || "Region unknown")}
+                    &bull;
+                    ${escapeHtml(wine.year || "Year unknown")}
                 </div>
-
             </div>
 
             <div class="wine-actions">
-
-                <button class="action-btn view-btn">
-                    View
-                </button>
-
-                <button class="action-btn delete-btn">
-                    Remove
-                </button>
-
+                <button class="action-btn view-btn" type="button">View</button>
+                <button class="action-btn delete-btn" type="button">Remove</button>
             </div>
         `;
 
-        const viewButton = wineCard.querySelector(".view-btn");
-
-        viewButton.addEventListener("click", () => {
-
-            console.log("Viewing wine:", wine);
-
-            // Example:
-            // window.location.href = `/wine.html?id=${wine.id}`;
+        wineCard.querySelector(".view-btn").addEventListener("click", () => {
+            window.location.href = `/view?wineid=${encodeURIComponent(wine.wineid)}`;
         });
 
-
-        const removeButton = wineCard.querySelector(".delete-btn");
-
-        removeButton.addEventListener("click", () => {
-
+        wineCard.querySelector(".delete-btn").addEventListener("click", () => {
             removeWine(wine.name);
         });
 
         wineList.appendChild(wineCard);
-
     });
 }
 
 function searchWines() {
-
     const query = searchBox.value.toLowerCase().trim();
 
     const filteredWines = wines.filter((wine) => {
+        const grapes = Array.isArray(wine.grapes) ? wine.grapes : [];
 
         return (
-
-            wine.name.toLowerCase().includes(query) ||
-
-            wine.main_grape.toLowerCase().includes(query) ||
-
-            wine.region.toLowerCase().includes(query) ||
-
-            wine.year.toString().includes(query)
-
+            String(wine.name ?? "").toLowerCase().includes(query) ||
+            grapes.some((grape) => String(grape).toLowerCase().includes(query)) ||
+            String(wine.region ?? "").toLowerCase().includes(query) ||
+            String(wine.year ?? "").includes(query)
         );
     });
 
@@ -155,16 +121,10 @@ function searchWines() {
 }
 
 async function removeWine(wineName) {
-
     try {
-
         const response = await fetch(
-
             `${API_URL}/${encodeURIComponent(wineName)}`,
-
-            {
-                method: "DELETE"
-            }
+            { method: "DELETE" }
         );
 
         if (!response.ok) {
@@ -172,31 +132,15 @@ async function removeWine(wineName) {
         }
 
         wines = wines.filter((wine) => wine.name !== wineName);
-
         renderWines(wines);
-
     }
     catch (error) {
-
         console.error(error);
-
         alert("Failed to remove wine");
     }
 }
 
-function capitalize(text) {
-
-    return text
-        .split(" ")
-        .map(word =>
-            word.charAt(0).toUpperCase() +
-            word.slice(1)
-        )
-        .join(" ");
-}
-
 searchButton.addEventListener("click", searchWines);
-
 searchBox.addEventListener("input", searchWines);
 
 fetchWines();

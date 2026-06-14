@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>View Wine</title>
+  <link rel="stylesheet" href="/assets/styles/app.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="top-bar">
+      <img class="logo" src="/assets/icons/logo.svg" alt="" />
+      <h1 class="title">Wine Details</h1>
+    </header>
+
+    <section class="content-panel wine-detail-panel" aria-live="polite">
+      <div class="wine-detail-layout">
+        <div class="bottle-placeholder" aria-label="Wine bottle image">
+          <img class="bottle-image" data-wine-image alt="" hidden />
+          <div class="bottle-silhouette" aria-hidden="true"></div>
+        </div>
+
+        <article class="wine-detail-content">
+          <div class="wine-detail-header">
+            <p class="eyebrow">Cellar bottle</p>
+            <h2 class="wine-detail-title" data-wine-name>Loading wine...</h2>
+            <div class="wine-detail-subtitle" data-wine-summary></div>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-stat">
+              <span class="detail-label">Region</span>
+              <span class="detail-value" data-wine-region></span>
+            </div>
+
+            <div class="detail-stat">
+              <span class="detail-label">Grapes</span>
+              <span class="detail-value" data-wine-grapes></span>
+            </div>
+
+            <div class="detail-stat">
+              <span class="detail-label">Year</span>
+              <span class="detail-value" data-wine-year></span>
+            </div>
+            <div class="detail-stat">
+              <span class="detail-label">Quantity</span>
+              <span class="detail-value" data-wine-quantity></span>
+            </div>
+            <div class="detail-stat">
+              <span class="detail-label">Drink from</span>
+              <span class="detail-value" data-wine-drink-start></span>
+            </div>
+            <div class="detail-stat">
+              <span class="detail-label">Drink by</span>
+              <span class="detail-value" data-wine-drink-end></span>
+            </div>
+
+          </div>
+
+          <section class="detail-section">
+            <h2>Tasting Notes</h2>
+            <p data-wine-tasting-notes></p>
+          </section>
+
+          <section class="detail-section">
+            <h2>Pairings</h2>
+            <div class="tag-list" data-wine-pairings></div>
+          </section>
+        </article>
+      </div>
+    </section>
+
+    <nav class="bottom-nav detail-nav" aria-label="Primary">
+      <button class="nav-btn" type="button" data-back-button>Back to search</button>
+      <button class="nav-btn" type="button" data-home-button>Home</button>
+    </nav>
+  </main>
+
+  <script src="/scripts/viewwine.js"></script>
+</body>
+</html>

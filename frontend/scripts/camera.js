@@ -2,7 +2,13 @@ const video = document.getElementById('previewVideo');
 const canvas = document.getElementById('hiddenCanvas');
 const switchCameraButton = document.getElementById('switchCameraButton');
 const captureButton = document.getElementById('captureButton');
+const uploadButton = document.getElementById('uploadButton');
+const uploadInput = document.getElementById('uploadInput');
 const statusText = document.getElementById('statusText');
+const errorPopup = document.getElementById('errorPopup');
+const errorPopupMessage = document.getElementById('errorPopupMessage');
+const errorPopupClose = document.getElementById('errorPopupClose');
+const uploadTestMode = new URLSearchParams(window.location.search).get('test_error') === '1';
 
 let currentStream = null;
 let videoDevices = [];
@@ -12,6 +18,16 @@ let capturedBlob = null;
 function updateStatus(message, isError = false) {
   statusText.textContent = message;
   statusText.style.color = isError ? '#ff6b6b' : '#f1f1f1';
+}
+
+function showErrorPopup(message) {
+  errorPopupMessage.textContent = message;
+  errorPopup.style.visibility = 'visible';
+}
+
+function hideErrorPopup() {
+  errorPopup.style.visibility = 'hidden';
+  window.location.href = '/camera';
 }
 
 function getUserMedia(constraints) {
@@ -77,14 +93,14 @@ function isSecureContextOfferReasonable() {
 
 async function initCamera() {
   if (!getUserMedia) {
-    updateStatus('Camera not supported in this browser.', true);
+    updateStatus('Camera not supported in this browser. You can still upload an image.', true);
     captureButton.disabled = true;
     switchCameraButton.disabled = true;
     return;
   }
 
   if (!isSecureContextOfferReasonable()) {
-    updateStatus('Camera requires HTTPS on iOS. Open this page using HTTPS or localhost.', true);
+    updateStatus('Camera requires HTTPS on iOS. You can still upload an image.', true);
     captureButton.disabled = true;
     switchCameraButton.disabled = true;
     return;
@@ -100,6 +116,29 @@ async function initCamera() {
     captureButton.disabled = true;
     switchCameraButton.disabled = true;
   }
+}
+
+async function finalizeImageUpload(blob, previewFilename) {
+  capturedBlob = blob;
+
+  video.style.visibility = 'hidden';
+
+  const postCaptureImage = document.getElementById('PostCaptureImage');
+  postCaptureImage.src = URL.createObjectURL(capturedBlob);
+  postCaptureImage.style.display = 'flex';
+
+  const div = document.getElementById('overlayDiv');
+  div.style.display = 'flex';
+
+  captureButton.style.display = 'none';
+  uploadButton.style.display = 'none';
+  switchCameraButton.style.display = 'none';
+  updateStatus(previewFilename ? `Uploaded ${previewFilename}. Sending to server...` : 'Image selected. Sending to server...');
+  captureButton.disabled = true;
+  uploadButton.disabled = true;
+  await sendPhoto();
+  captureButton.disabled = false;
+  uploadButton.disabled = false;
 }
 
 function capturePhoto() {
@@ -119,29 +158,24 @@ function capturePhoto() {
       return;
     }
 
-    capturedBlob = blob;
-    let video = document.getElementById("previewVideo")
-    video.style.visibility = "hidden";
-
-    let postCaptureImage = document.getElementById("PostCaptureImage");
-    postCaptureImage.src = URL.createObjectURL(capturedBlob);
-    postCaptureImage.style.display = "flex";
-
-    let div = document.getElementById("overlayDiv");
-    div.style.display = "flex";
-
-    captureButton.style.display = "none";
-    switchCameraButton.style.display = "none";
-    updateStatus('Photo captured. Sending to server...');
-    captureButton.disabled = true;
-    await sendPhoto();
-    captureButton.disabled = false;
+    await finalizeImageUpload(blob);
   }, 'image/png');
+}
+
+async function handleUploadSelection() {
+  const [file] = uploadInput.files || [];
+  if (!file) {
+    return;
+  }
+
+  await finalizeImageUpload(file, file.name);
+  uploadInput.value = '';
 }
 
 async function sendPhoto() {
   if (!capturedBlob) {
     updateStatus('No photo to send.', true);
+    showErrorPopup('No image was selected. Please try again.');
     return;
   }
 
@@ -149,17 +183,30 @@ async function sendPhoto() {
   formData.append('photo', capturedBlob, 'photo.png');
 
   try {
-    const response = await fetch('/upload-photo', {
+    const uploadUrl = new URL('/upload-photo', window.location.origin);
+    if (uploadTestMode) {
+      uploadUrl.searchParams.set('test_error', '1');
+    }
+
+    const response = await fetch(uploadUrl.toString(), {
       method: 'POST',
       body: formData,
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text || `Server returned ${response.status}`);
+      let errorBody = null;
+      try {
+        errorBody = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        errorBody = null;
+      }
+
+      throw new Error(errorBody?.message || responseText || `The server could not process that image. (${response.status})`);
     }
 
-    const result = await response.json().catch(() => null);
+    const result = responseText ? JSON.parse(responseText) : null;
 
 
     updateStatus(result?.message || 'Photo uploaded successfully.');
@@ -167,6 +214,7 @@ async function sendPhoto() {
     const url = new URL(window.location.href);
     console.log(result)
     url.pathname += "/verify/";
+    url.searchParams.delete('test_error');
     url.searchParams.set("img", result.filename);
     url.searchParams.set("name", result.name);
     url.searchParams.set("grape_variety", result.grape_variety);
@@ -176,7 +224,9 @@ async function sendPhoto() {
 
     window.location.href = url.toString();
   } catch (error) {
-    updateStatus(`Upload failed: ${error.message}`, true);
+    const message = error.message || 'The image could not be processed.';
+    updateStatus(`Upload failed: ${message}`, true);
+    showErrorPopup(message);
   }
 }
 
@@ -196,5 +246,13 @@ async function switchCamera() {
 
 switchCameraButton.addEventListener('click', switchCamera);
 captureButton.addEventListener('click', capturePhoto);
+uploadButton.addEventListener('click', () => uploadInput.click());
+uploadInput.addEventListener('change', handleUploadSelection);
+errorPopupClose.addEventListener('click', hideErrorPopup);
+errorPopup.addEventListener('click', (event) => {
+  if (event.target === errorPopup) {
+    hideErrorPopup();
+  }
+});
 
 initCamera();

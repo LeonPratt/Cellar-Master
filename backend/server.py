@@ -41,6 +41,12 @@ def search_wines():
 def search_pairings():
     return send_page("pairings.html")
 
+
+@app.route("/view")
+def view_wine():
+    return send_page("viewwine.html")
+
+
 @app.route("/camera")
 def camera_page():
     return send_page("camera.html")
@@ -69,6 +75,18 @@ def getwines():
     return jsonify({"wines": res})
 
 
+@app.route("/wine/<int:wineid>")
+def get_wine(wineid):
+    conn = dbmanager.connect()
+    res = dbmanager.get_wine_by_id(conn, wineid)
+    conn.close()
+
+    if res is None:
+        return jsonify({"message": "Wine not found"}), 404
+
+    return jsonify({"wine": res})
+
+
 @app.route("/pairing-wines")
 def get_pairing_wines():
     pairing = request.args.get("q", "")
@@ -80,6 +98,11 @@ def get_pairing_wines():
 
 @app.route("/upload-photo", methods=["POST"])
 def upload_photo():
+    if request.args.get("test_error") == "1":
+        return jsonify({
+            "message": "Test error: upload failed on purpose so you can verify the popup.",
+        }), 500
+
     if "photo" not in request.files:
         return jsonify({"message": "No photo file provided."}), 400
 
@@ -93,7 +116,13 @@ def upload_photo():
     save_path = UPLOAD_DIR / save_name
     photo.save(save_path)
 
-    details = infer_wine_details.infer_basic(save_path, True)
+    try:
+        details = infer_wine_details.infer_basic(save_path, True, local=True)
+    except Exception:
+        return jsonify({
+            "message": "The image could not be analyzed. Please try a clearer wine photo.",
+        }), 500
+
     return jsonify({
         "message": "Photo saved successfully.",
         "filename": save_name.split(".png")[0],
@@ -101,6 +130,7 @@ def upload_photo():
         "year": details["year"],
         "grape_variety": details["grape_variety"],
         "region": details["region"],
+        "imgpath": save_name
     })
 
 
@@ -112,11 +142,15 @@ def serve_upload(filename):
 @app.route("/add-to-cellar", methods=["POST"])
 def add():
     data = request.get_json()
+    print(data)
+    with open("debug_log.txt", "a") as f:
+        f.write(f"Received data: {data}\n")
     try:
         infer_wine_details.Add_to_cellar(data)
         return jsonify({"status": "added"})
     except Exception:
         return jsonify({"status": "failed"}), 500
+        
 
 
 @app.route("/remove-from-cellar", methods=["POST"])

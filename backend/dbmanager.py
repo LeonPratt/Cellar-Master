@@ -116,21 +116,23 @@ def insert_new_wine(conn, data: dict):
         food_pairings: list[str],
         drink_window_start: int,
         drink_window_end: int,
-        wine_notes: list[str].
-        quantity: int
+        wine_notes: list[str],
+        quantity: int,
+        imgpath:str
     }
     """
 
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO wines (name, year, region, tasting_notes)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO wines (name, year, region, tasting_notes, image_path)
+        VALUES (?, ?, ?, ?, ?)
     """, (
         data["name"],
         data["year"],
         data["region"],
-        data["tasting_notes"]
+        data["tasting_notes"],
+        data["imgpath"]
     ))
 
     wineid = cur.lastrowid
@@ -151,7 +153,11 @@ def insert_new_wine(conn, data: dict):
         data["drink_window_end"]
     ))
 
-    for grape in data.get("grape_variety", []):
+    grape_variety = data.get("grape_variety", [])
+    if isinstance(grape_variety, str):
+        grape_variety = [grape_variety]
+
+    for grape in grape_variety:
         grape_id = get_or_create_grape(conn, grape)
 
         cur.execute("""
@@ -198,7 +204,7 @@ def get_all_wineids_from_pairing(conn, pairing):
         return []
     cur.execute("""
         SELECT wp.wineid
-        FROM WINE_PAIRINGS wp
+            "grape_variety": ["Viognier"],
         INNER JOIN CELLAR c ON wp.wineid = c.wineid
         WHERE wp.pairingid = ? AND c.quantity > 0;
     """, (pairingid[0],))
@@ -288,10 +294,12 @@ def search_wines(conn, search_term="", limit=10):
             w.name,
             w.year,
             w.region,
-            GROUP_CONCAT(g.name) AS grapes
+            GROUP_CONCAT(DISTINCT g.name) AS grapes
         FROM WINES w
+        INNER JOIN CELLAR c ON w.wineid = c.wineid
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
         LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
+        WHERE c.quantity > 0
         GROUP BY w.wineid
         ORDER BY w.wineid
         LIMIT ?
@@ -310,12 +318,16 @@ def search_wines(conn, search_term="", limit=10):
             w.region,
             GROUP_CONCAT(DISTINCT g.name) AS grapes
         FROM WINES w
+        INNER JOIN CELLAR c ON w.wineid = c.wineid
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
         LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
         WHERE
-            w.name LIKE ?
-            OR w.region LIKE ?
-            OR g.name LIKE ?
+            c.quantity > 0
+            AND (
+                w.name LIKE ?
+                OR w.region LIKE ?
+                OR g.name LIKE ?
+            )
         GROUP BY w.wineid
         ORDER BY w.wineid
         LIMIT ?
@@ -337,6 +349,56 @@ def search_wines(conn, search_term="", limit=10):
         })
 
     return wines
+
+
+def get_wine_by_id(conn, wineid: int):
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            w.wineid,
+            w.name,
+            w.year,
+            w.region,
+            w.tasting_notes,
+            c.quantity,
+            GROUP_CONCAT(DISTINCT g.name) AS grapes,
+            GROUP_CONCAT(DISTINCT fp.name) AS pairings,
+            w.image_path,
+            dw.start_year,
+            dw.end_year
+        FROM WINES w
+        LEFT JOIN CELLAR c ON w.wineid = c.wineid
+        LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
+        LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
+        LEFT JOIN WINE_PAIRINGS wp ON w.wineid = wp.wineid
+        LEFT JOIN FOOD_PAIRINGS fp ON wp.pairingid = fp.pairingid
+        LEFT JOIN drinking_windows dw ON w.wineid = dw.wineid
+        WHERE w.wineid = ?
+        GROUP BY w.wineid
+        """,
+        (wineid,)
+    )
+
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    return {
+        "wineid": row[0],
+        "name": row[1],
+        "year": row[2],
+        "region": row[3],
+        "tasting_notes": row[4],
+        "quantity": row[5] or 0,
+        "grapes": row[6].split(",") if row[6] else [],
+        "pairings": row[7].split(",") if row[7] else [],
+        "imgpath": f"{row[8]}.png" if row[8] else "assets/images/bottle_placeholder.png",
+        "drink_window_start": row[9] if row[9] else "Unknown",
+        "drink_window_end": row[10] if row[10] else "Unknown"
+    }
 
 
 if __name__ == "__main__":

@@ -2,230 +2,52 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CellarMaster</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
-
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-    }
-
-    body{
-      margin:0;
-      min-height:100vh;
-      background:#dcdcdc;
-      font-family:'Montserrat', sans-serif;
-    }
-
-    .main{
-      width:100vw;
-      height:100vh;
-      overflow:hidden;
-      position:relative;
-      border-radius:0;
-      box-shadow:none;
-
-      /* ADD YOUR BACKGROUND IMAGE HERE */
-      background-color:#222;
-      background-image: url("/assets/images/HomePagebg.png");
-      background-size:cover;
-      background-position:center;
-    }
-
-    /* Top Button */
-    .top-bar{
-      width:100%;
-      height:9.36%;
-      background:#2f3568;
-      border:none;
-
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:0%;
-
-      cursor:pointer;
-    }
-
-    .top-bar img{
-      width:10.8%;
-      height:auto;
-      max-width:42px;
-    }
-
-    .top-bar h1{
-      color:white;
-      font-size:clamp(1.5rem, 3vw, 2rem);
-      font-weight:800;
-    }
-
-    /* Main Glass Panel */
-    .panel{
-      width:69.3%;
-      height:75.1%;
-
-      position:absolute;
-      top:17.85%;
-      left:50%;
-      transform:translateX(-50%);
-
-      background:rgba(255,255,255,0.78);
-      backdrop-filter:blur(4px);
-
-      border-radius:6.4%;
-
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:space-evenly;
-
-      padding:4.5% 0;
-    }
-
-    /* Action Buttons */
-    .menu-btn{
-      width:44%;
-      height:44%;
-
-      background:#f5f5f5;
-      border-radius:30px;
-
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-
-      font-size:clamp(0.9rem, 2vw, 1rem);
-      font-weight:800;
-      line-height:1.3;
-      text-align:center;
-      color:#3f3f3f;
-
-      cursor:pointer;
-      transition:0.2s ease;
-
-      box-shadow:0 4px 10px rgba(0,0,0,0.25);
-      margin:5px;
-    }
-
-    .menu-btn:hover{
-      transform:scale(1.03);
-    }
-
-    /* Green Button */
-    .green{
-      border:4px solid #158a5c;
-      background:linear-gradient(
-        to bottom,
-        #ffffff 55%,
-        rgba(21,138,92,0.45)
-      );
-    }
-
-    /* Blue Button */
-    .blue{
-      border:4px solid #2f35d3;
-      background:linear-gradient(
-        to bottom,
-        #ffffff 60%,
-        rgba(47,53,211,0.18)
-      );
-    }
-
-    /* Yellow Button */
-    .yellow{
-      border:4px solid #c8ac1f;
-      background:linear-gradient(
-        to bottom,
-        #ffffff 60%,
-        rgba(200,172,31,0.35)
-      );
-    }
-
-    .icon{
-      margin-bottom:1rem;
-    }
-
-    /* Plus Icon */
-    .plus{
-      font-size:clamp(3rem, 6vw, 4rem);
-      line-height:0.8;
-      color:#158a5c;
-    }
-
-    /* Search Icon */
-    .search-icon{
-      width:14%;
-      min-width:38px;
-      height:14%;
-      min-height:38px;
-      position:relative;
-    }
-
-    .yellow .search-icon{
-      color:#c8ac1f;
-    }
-
-  </style>
+  <link rel="stylesheet" href="/assets/styles/app.css" />
 </head>
 <body>
-
-  <div class="main">
-
-    <!-- CellarMaster Button -->
-    <button class="top-bar">
-        <img src="/assets/icons/logo.svg" alt="Wine Icon" />
-        <h1>CellarMaster</h1>
-      
+  <main class="home-shell">
+    <button class="top-bar" type="button" aria-label="CellarMaster home">
+      <img class="logo" src="/assets/icons/logo.svg" alt="" />
+      <h1 class="brand-title">CellarMaster</h1>
     </button>
 
-    <div class="panel">
+    <section class="content-panel home-panel">
+      <div class="home-intro">
+        <p class="eyebrow">Private cellar</p>
+        <h2>Keep track of the bottles worth remembering.</h2>
+        <p>
+          Add wines from a label photo, search your cellar, or find bottles that suit tonight's food.
+        </p>
+      </div>
 
-      <!-- Add / Remove Wine -->
-      <button class="menu-btn green" id="add_remove">
-        <div class="icon plus">+</div>
+      <div class="action-grid">
+        <button class="menu-btn" id="add_remove" type="button">
+          <span class="menu-icon plus" aria-hidden="true">+</span>
+          <span>Cellar tools</span>
+          <strong>Add or remove wine</strong>
+        </button>
 
-        <div>
-          ADD OR<br>
-          REMOVE<br>
-          WINE
-        </div>
-      </button>
+        <button class="menu-btn" id="search_wine" type="button">
+          <span class="menu-icon">
+            <img src="/assets/icons/searchicon.svg" alt="" />
+          </span>
+          <span>Inventory</span>
+          <strong>Search my wines</strong>
+        </button>
 
-      <!-- Search My Wines -->
-      <button class="menu-btn blue" id="search_wine">
-        <img class = "icon search-icon" src="/assets/icons/wine-search-icon.svg" alt="Search Icon">
+        <button class="menu-btn" id="search_pairing" type="button">
+          <span class="menu-icon">
+            <img src="/assets/icons/searchicon.svg" alt="" />
+          </span>
+          <span>Pairing guide</span>
+          <strong>Match food pairings</strong>
+        </button>
+      </div>
+    </section>
+  </main>
 
-
-        <div>
-          SEARCH<br>
-          MY<br>
-          WINES
-        </div>
-      </button>
-
-      <!-- Search Food Pairings -->
-      <button class="menu-btn yellow" id ="search_pairing">
-        <img class = "icon search-icon" src="/assets/icons/food-pairing-icon.svg" alt="Search Icon">
-        
-
-        <div>
-          SEARCH<br>
-          FOOD<br>
-          PAIRINGS
-        </div>
-      </button>
-
-    </div>
-
-  </div>
-<script src="/scripts/home.js"></script>
-
+  <script src="/scripts/home.js"></script>
 </body>
 </html>

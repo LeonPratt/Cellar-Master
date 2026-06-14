@@ -2,303 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Food Pairings</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700;800&display=swap" rel="stylesheet">
-
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-    }
-
-    body{
-      width:100%;
-      min-height:100vh;
-
-      display:flex;
-      justify-content:center;
-      align-items:center;
-
-      background:#d9d9d9;
-      font-family:'Montserrat', sans-serif;
-    }
-
-    .app{
-      width:100%;
-      height:100vh;
-
-      position:relative;
-      overflow:hidden;
-
-      background-color:#222;
-      background-image:url("/assets/images/HomePagebg.png");
-      background-size:cover;
-      background-position:center;
-      background-repeat:no-repeat;
-    }
-
-    .top-bar{
-      width:100%;
-      height:10vh;
-      min-height:70px;
-
-      background:#2f3568;
-      border:none;
-
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:3vw;
-
-      cursor:pointer;
-    }
-
-    .logo{
-      width:5%;
-      color:white;
-    }
-
-    .title{
-      color:white;
-      font-size:clamp(1.7rem, 5vw, 2.5rem);
-      font-weight:800;
-    }
-
-    .panel{
-      width:88%;
-      height:82%;
-
-      position:absolute;
-      top:54%;
-      left:50%;
-      transform:translate(-50%, -50%);
-
-      background:rgba(255,255,255,0.78);
-      backdrop-filter:blur(5px);
-
-      border-radius:5vw;
-
-      padding:3vh 4vw;
-
-      display:flex;
-      flex-direction:column;
-      gap:2vh;
-    }
-
-    .search-container{
-      width:100%;
-      display:flex;
-      gap:3vw;
-    }
-
-    .search-box{
-      flex:1;
-
-      height:6.5vh;
-
-      border:none;
-      border-radius:4vw;
-
-      padding:0 5vw;
-
-      font-size:clamp(0.9rem, 2.8vw, 1.1rem);
-      font-family:'Montserrat', sans-serif;
-
-      outline:none;
-
-      background:white;
-
-      box-shadow:0 0.3vh 1vh rgba(0,0,0,0.15);
-    }
-
-    .search-btn{
-      width:15vw;
-      max-width:65px;
-
-      border:none;
-      border-radius:4vw;
-
-      background:#2f35d4;
-
-      color:white;
-
-      font-size:1.4rem;
-      font-weight:700;
-
-      cursor:pointer;
-
-      box-shadow:0 0.3vh 1vh rgba(0,0,0,0.2);
-
-      transition:0.2s ease;
-    }
-
-    .search-btn img{
-      width:55%;
-      min-width:24px;
-      vertical-align:middle;
-    }
-
-    .search-btn:hover{
-      transform:scale(1.05);
-    }
-
-    .pairing-summary{
-      min-height:1.2rem;
-      color:#333;
-      font-size:clamp(0.8rem, 2.4vw, 0.95rem);
-      font-weight:700;
-      padding:0 1vw;
-    }
-
-    .wine-list{
-      flex:1;
-
-      overflow-y:auto;
-
-      display:flex;
-      flex-direction:column;
-      gap:2vh;
-
-      padding-right:1vw;
-    }
-
-    .wine-card{
-      background:white;
-
-      border-radius:5vw;
-
-      padding:2vh 4vw;
-
-      box-shadow:0 0.4vh 1vh rgba(0,0,0,0.15);
-
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:3vw;
-
-      border-left:1.3vw solid #7b1e1e;
-    }
-
-    .wine-info{
-      display:flex;
-      flex-direction:column;
-      gap:0.6vh;
-      min-width:0;
-    }
-
-    .wine-name{
-      font-size:clamp(1rem, 3.5vw, 1.3rem);
-      font-weight:800;
-      color:#333;
-      overflow-wrap:anywhere;
-    }
-
-    .wine-details{
-      font-size:clamp(0.75rem, 2.5vw, 0.95rem);
-      color:#666;
-      font-weight:500;
-      overflow-wrap:anywhere;
-    }
-
-    .pairing-tags{
-      display:flex;
-      flex-wrap:wrap;
-      gap:0.6vh 1.5vw;
-      margin-top:0.3vh;
-    }
-
-    .pairing-tag{
-      background:#eceefe;
-      color:#2f3568;
-      border-radius:3vw;
-      padding:0.45vh 2vw;
-      font-size:clamp(0.65rem, 2vw, 0.8rem);
-      font-weight:700;
-    }
-
-    .quantity-pill{
-      flex:0 0 auto;
-      background:#2f3568;
-      color:white;
-      border-radius:3vw;
-      padding:1vh 3vw;
-      font-size:clamp(0.75rem, 2.3vw, 0.9rem);
-      font-weight:800;
-      white-space:nowrap;
-    }
-
-    .bottom-nav{
-      width:100%;
-      height:8vh;
-
-      position:absolute;
-      bottom:0;
-      left:0;
-
-      background:#2f3568;
-
-      display:flex;
-      justify-content:space-around;
-      align-items:center;
-    }
-
-    .nav-btn{
-      background:none;
-      border:none;
-
-      color:white;
-
-      font-size:clamp(0.8rem, 2.5vw, 1rem);
-      font-weight:700;
-
-      cursor:pointer;
-    }
-
-    .wine-list::-webkit-scrollbar{
-      width:6px;
-    }
-
-    .wine-list::-webkit-scrollbar-thumb{
-      background:#999;
-      border-radius:10px;
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/styles/app.css" />
 </head>
 <body>
+  <main class="app">
+    <header class="top-bar">
+      <img class="logo" src="/assets/icons/logo.svg" alt="" />
+      <h1 class="title">Pairings</h1>
+    </header>
 
-  <div class="app">
-
-    <div class="top-bar">
-
-      <img class="logo" src="/assets/icons/logo.svg" alt="Vinum logo">
-
-      <div class="title">
-        Pairings
-      </div>
-
-    </div>
-
-    <div class="panel">
-
+    <section class="content-panel workspace-panel" aria-label="Food pairing search">
       <div class="search-container">
-
         <input
           type="text"
           class="search-box"
-          placeholder="Search a food pairing..."
+          placeholder="Search a food, dish or ingredient"
           autocomplete="off"
-        >
+        />
 
-        <button class="search-btn" aria-label="Search pairings">
-          <img src="/assets/icons/searchicon.svg" alt="">
+        <button class="search-btn" type="button" aria-label="Search pairings">
+          <img src="/assets/icons/searchicon.svg" alt="" />
         </button>
-
       </div>
 
       <div class="pairing-summary">
@@ -306,17 +32,13 @@
       </div>
 
       <div class="wine-list"></div>
+    </section>
 
-    </div>
+    <nav class="bottom-nav" aria-label="Primary">
+      <button class="nav-btn" type="button">Home</button>
+    </nav>
+  </main>
 
-    <div class="bottom-nav">
-
-      <button class="nav-btn">
-        Home
-      </button>
-    </div>
-
-  </div>
-<script src="/scripts/pairings.js"></script>
+  <script src="/scripts/pairings.js"></script>
 </body>
 </html>

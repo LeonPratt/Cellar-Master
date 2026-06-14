@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -13,8 +14,7 @@ import dbmanager
 from ollama import chat, web_fetch, web_search, Client
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
-def infer_basic(img, testing=False):
-
+def infer_basic(img, testing=False, local=True):
     if testing:
         testdict = {
             "name": "The Virgilius",
@@ -23,24 +23,41 @@ def infer_basic(img, testing=False):
             "region": "Eden Valley"
             }
         return testdict
-    if OLLAMA_API_KEY == None:
-        raise Exception("Ollama API key not set. Set it in .env")
-    
-    client = Client(
-        host="https://ollama.com",
-        headers={'Authorization': 'Bearer ' + OLLAMA_API_KEY}
-    )
-    messages = [
-    {
-        'role': 'user',
-        'content': 'look at this image of a wine bottle. Extract the name of the wine, the year it was produced, the grape variety, and the region it was produced in. If you cannot find any of this information, say "unknown". Return the information in a JSON format with the following structure: {"name": "name of the wine", "year": "year it was produced", "grape_variety": "grape variety", "region": "region it was produced in"}. If the year is unknown return 0 for the year.',
-        'images': [img]
-    },
-    ]
     response = ""
-    for part in client.chat('gemma3:4b-cloud', messages=messages, stream=True):
-        response += part['message']['content']
-    return response
+    if local:
+        unparsed_response = chat(
+            model='gemma3:4b',
+                messages=[
+                    {
+                    'role': 'user',
+                    'content': 'look at this image of a wine bottle. Extract the name of the wine, the year it was produced, the grape variety, and the region it was produced in. If you cannot find any of this information, say "unknown". Return the information in a JSON format with the following structure: {"name": "name of the wine", "year": "year it was produced", "grape_variety": "grape variety", "region": "region it was produced in"}. If the year is unknown return 0 for the year.',
+                    'images': [img]
+                    }
+                ]
+            )
+        response = unparsed_response['message']['content']
+        with open("debug_log.txt", "a") as f:
+            f.write(f"Unparsed response: {unparsed_response}\n")
+            f.write(f"Parsed response: {response}\n")
+        return parseResponse(response)
+    else:
+        if OLLAMA_API_KEY == None:
+            raise Exception("Ollama API key not set. Set it in .env")
+        
+        client = Client(
+            host="https://ollama.com",
+            headers={'Authorization': 'Bearer ' + OLLAMA_API_KEY}
+        )
+        messages = [
+        {
+            'role': 'user',
+            'content': 'look at this image of a wine bottle. Extract the name of the wine, the year it was produced, the grape variety, and the region it was produced in. If you cannot find any of this information, say "unknown". Return the information in a JSON format with the following structure: {"name": "name of the wine", "year": "year it was produced", "grape_variety": "grape variety", "region": "region it was produced in"}. If the year is unknown return 0 for the year.',
+            'images': [img]
+        },
+        ]
+        for part in client.chat('gemma3:4b-cloud', messages=messages, stream=True):
+            response += part['message']['content']
+    return parseResponse(response)
 
 
 def gen_extra_details(wine_details):
@@ -98,35 +115,51 @@ def gen_extra_details(wine_details):
       else:
         break
 
+    
     return json.loads(response_json)
 
 def parseResponse(response):
-    data = response[response.index("{")+1:response.index("}")]
-    print(data)
+    match = re.search(r"\{.*\}", response, re.DOTALL)
+    if not match:
+        raise ValueError(f"Could not find JSON in response: {response}")
 
-    lines = data.split(",")
-    def parseline(line):
-        parsed = line.split(":")[1].replace('"','').strip(" ").strip("\n")
-        return parsed 
-    parsed = {
-        "name":parseline(lines[0]),
-        "year":int(parseline(lines[1])),
-        "grape_variety":parseline(lines[2]),
-        "region":parseline(lines[3]),
+    data = match.group(0)
+    print(data)
+    parsed = json.loads(data)
+
+    year_value = parsed.get("year", 0)
+    try:
+        year_value = int(year_value)
+    except (TypeError, ValueError):
+        year_value = 0
+
+    return {
+        "name": parsed.get("name", "unknown"),
+        "year": year_value,
+        "grape_variety": parsed.get("grape_variety", "unknown"),
+        "region": parsed.get("region", "unknown"),
     }
 
-    return parsed
-
 def Add_to_cellar(data):
+    print("WE ARE HERE")
     conn = dbmanager.connect()
     wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
-
+    with open("debug_logffff.txt", "a") as f:
+        f.write(f"Received data: {data}\n")
     if wineid == None:
+        """
         extra_details = gen_extra_details(data)
         data["tasting_notes"] = extra_details["tasting_notes"]
         data["food_pairings"] = extra_details["food_pairings"].split("|")
         data["drink_window_start"] = extra_details["start_year"]
         data["drink_window_end"] = extra_details["end_year"]
+        """
+        data["tasting_notes"] = "idk,yada,yada"
+        data["food_pairings"] = "Roasted chicken|turkey|lamb|steak".split("|")
+        data["drink_window_start"] = "2015"
+        data["drink_window_end"] = "2025"
+        with open("debug_logaaaaa.txt", "a") as f:
+            f.write(f"Received data: {data}\n")
         dbmanager.insert_new_wine(conn, data)
 
     else:

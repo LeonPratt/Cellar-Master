@@ -14,17 +14,14 @@ def create_connection(db_name=DB_DIR):
 
 def create_tables(conn):
     cursor = conn.cursor()
-
-    # -----------------------
-    # CORE WINE TABLE
-    # -----------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS wines (
         wineid INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
         year INTEGER,
         region TEXT,
-        tasting_notes TEXT
+        tasting_notes TEXT,
+        image_path TEXT
     );
     """)
 

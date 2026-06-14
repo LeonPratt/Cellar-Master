@@ -1,0 +1,943 @@
+:root {
+  --bg: #f5f2ed;
+  --ink: #221f1f;
+  --muted: #6f6963;
+  --surface: rgba(255, 255, 255, 0.94);
+  --surface-solid: #fffdf9;
+  --border: rgba(61, 50, 43, 0.13);
+  --brand: #5e1f2f;
+  --brand-dark: #39121d;
+  --accent: #b88746;
+  --green: #236850;
+  --blue: #314f7f;
+  --danger: #9f322d;
+  --shadow: 0 18px 48px rgba(43, 31, 24, 0.16);
+  --soft-shadow: 0 8px 24px rgba(43, 31, 24, 0.11);
+  --radius: 8px;
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app,
+.home-shell {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(33, 20, 16, 0.42), rgba(33, 20, 16, 0.22)),
+    url("/assets/images/HomePagebg.png") center / cover no-repeat;
+}
+
+.app {
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.app::before,
+.home-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(250, 246, 239, 0.2);
+  pointer-events: none;
+}
+
+.top-bar {
+  min-height: 72px;
+  padding: 16px clamp(18px, 5vw, 48px);
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: rgba(48, 20, 29, 0.95);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+button.top-bar {
+  width: 100%;
+  cursor: pointer;
+}
+
+.logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.brand-title,
+.title {
+  margin: 0;
+  color: white;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1.05;
+}
+
+.brand-title {
+  font-size: clamp(1.45rem, 5vw, 2.15rem);
+}
+
+.title {
+  font-size: clamp(1.35rem, 4.2vw, 2rem);
+}
+
+.content-panel {
+  width: min(1120px, calc(100% - 32px));
+  position: relative;
+  z-index: 1;
+  margin: 22px auto;
+  padding: clamp(18px, 4vw, 34px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(12px);
+}
+
+.home-panel {
+  width: min(900px, calc(100% - 32px));
+  margin-top: clamp(26px, 8vh, 72px);
+}
+
+.home-intro {
+  max-width: 650px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.home-intro h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.65rem, 5vw, 2.6rem);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.home-intro p {
+  max-width: 560px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: clamp(0.98rem, 2.8vw, 1.08rem);
+  line-height: 1.6;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.menu-btn {
+  min-height: 180px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-solid);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  text-align: left;
+  box-shadow: var(--soft-shadow);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.menu-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(94, 31, 47, 0.35);
+  box-shadow: 0 14px 34px rgba(43, 31, 24, 0.16);
+}
+
+.menu-icon {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #f4eee6;
+  color: var(--brand);
+}
+
+.menu-icon img {
+  width: 26px;
+  height: 26px;
+  display: block;
+}
+
+.menu-icon.plus {
+  padding-bottom: 3px;
+  font-size: 2rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.menu-btn span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 720;
+}
+
+.menu-btn strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+  line-height: 1.15;
+}
+
+.workspace-panel {
+  min-height: 0;
+  height: auto;
+  align-self: stretch;
+  width: min(1120px, calc(100% - 32px));
+  margin: 16px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.search-container {
+  display: flex;
+  gap: 10px;
+}
+
+.search-box {
+  min-width: 0;
+  height: 52px;
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 16px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 rgba(35, 24, 18, 0.04);
+}
+
+.search-box::placeholder {
+  color: #8c8580;
+}
+
+.search-box:focus {
+  border-color: rgba(94, 31, 47, 0.55);
+  box-shadow: 0 0 0 3px rgba(94, 31, 47, 0.12);
+}
+
+.search-btn {
+  width: 56px;
+  height: 52px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: white;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--soft-shadow);
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.search-btn:hover {
+  transform: translateY(-1px);
+  background: var(--brand-dark);
+}
+
+.search-btn img {
+  width: 22px;
+  height: 22px;
+}
+
+.pairing-summary {
+  min-height: 1.4rem;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+
+.wine-list {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.wine-card {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--surface-solid);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  box-shadow: 0 4px 16px rgba(43, 31, 24, 0.08);
+}
+
+.wine-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wine-name {
+  color: var(--ink);
+  font-size: clamp(1rem, 2.7vw, 1.18rem);
+  font-weight: 760;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.wine-details {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.wine-actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn,
+.quantity-pill {
+  border: 0;
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
+.action-btn {
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+.view-btn {
+  background: #efe8df;
+  color: var(--brand-dark);
+}
+
+.delete-btn {
+  background: var(--danger);
+  color: white;
+}
+
+.quantity-pill {
+  background: #efe8df;
+  color: var(--brand-dark);
+}
+
+.pairing-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.pairing-tag {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #f4eee6;
+  color: var(--brand-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.bottom-nav {
+  height: 52px;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(48, 20, 29, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.nav-btn {
+  border: 0;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 720;
+}
+
+.wine-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.wine-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(94, 31, 47, 0.28);
+}
+
+.wine-detail-panel {
+  min-height: 0;
+  align-self: stretch;
+  margin: 16px auto;
+  overflow-y: auto;
+}
+
+.wine-detail-layout {
+  display: grid;
+  grid-template-columns: minmax(190px, 280px) minmax(0, 1fr);
+  gap: clamp(18px, 4vw, 34px);
+  min-height: 100%;
+}
+
+.bottle-placeholder {
+  min-height: 360px;
+  border: 1px dashed rgba(94, 31, 47, 0.32);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(180deg, rgba(244, 238, 230, 0.62), rgba(255, 253, 249, 0.92));
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  text-align: center;
+  padding: 18px;
+}
+
+.bottle-image {
+  width: 100%;
+  max-height: 430px;
+  object-fit: contain;
+  display: block;
+}
+
+.bottle-image:not([hidden]) + .bottle-silhouette {
+  display: none;
+}
+
+.bottle-silhouette {
+  width: 74px;
+  height: 250px;
+  border: 2px solid rgba(94, 31, 47, 0.22);
+  border-radius: 26px 26px 10px 10px;
+  position: relative;
+}
+
+.bottle-silhouette::before {
+  content: "";
+  position: absolute;
+  top: -74px;
+  left: 23px;
+  width: 24px;
+  height: 82px;
+  border: 2px solid rgba(94, 31, 47, 0.22);
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+}
+
+.bottle-silhouette::after {
+  content: "Bottle image";
+  position: absolute;
+  left: 50%;
+  bottom: 82px;
+  transform: translateX(-50%);
+  width: 112px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 720;
+}
+
+.wine-detail-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.wine-detail-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wine-detail-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  line-height: 1.05;
+}
+
+.wine-detail-subtitle {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail-stat {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 13px;
+}
+
+.detail-label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detail-value {
+  color: var(--ink);
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.detail-section {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+.detail-section h2 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 1rem;
+}
+
+.detail-section p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-empty {
+  color: var(--muted);
+}
+
+.detail-nav {
+  gap: 18px;
+}
+
+.camera-body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: #050404;
+  color: white;
+  font-family: var(--font);
+}
+
+#previewVideo,
+#PostCaptureImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #050404;
+}
+
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.camera-top,
+.camera-bottom {
+  display: flex;
+  align-items: center;
+  padding: clamp(16px, 4vw, 24px);
+  pointer-events: auto;
+}
+
+.camera-top {
+  justify-content: space-between;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.68), transparent);
+}
+
+.camera-bottom {
+  justify-content: center;
+  gap: 16px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.58), transparent);
+}
+
+#statusText {
+  max-width: min(76vw, 620px);
+  color: #f5f2ed;
+  font-size: 0.96rem;
+  line-height: 1.45;
+}
+
+.icon-button,
+#captureButton {
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+#switchCameraButton {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  display: grid;
+  place-items: center;
+}
+
+#switchCameraButton img {
+  width: 22px;
+  height: 22px;
+}
+
+#uploadButton {
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  display: grid;
+  place-items: center;
+}
+
+#uploadButton img {
+  width: 22px;
+  height: 22px;
+}
+
+#captureButton {
+  width: 82px;
+  height: 82px;
+  border: 4px solid rgba(255, 255, 255, 0.94);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  position: relative;
+}
+
+#captureButton::before {
+  content: "";
+  position: absolute;
+  inset: 13px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+#captureButton:disabled,
+#switchCameraButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#overlayDiv {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.48);
+}
+
+.loader {
+  width: 48px;
+  aspect-ratio: 1;
+  border: 6px solid;
+  border-color: #fff transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(6, 5, 5, 0.56);
+  backdrop-filter: blur(6px);
+  visibility: hidden;
+}
+
+.popup-card {
+  width: min(460px, 100%);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: rgba(31, 18, 15, 0.96);
+  color: #f6f0ea;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+}
+
+.popup-card h2 {
+  margin: 0 0 10px;
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.popup-card p {
+  margin: 0;
+  color: rgba(246, 240, 234, 0.86);
+  line-height: 1.5;
+}
+
+.popup-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.popup-actions button {
+  min-width: 92px;
+  height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #f5f2ed;
+  color: #221f1f;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.verify-page {
+  min-height: 100vh;
+  overflow: hidden;
+  background: #090706;
+  font-family: var(--font);
+}
+
+.background {
+  position: fixed;
+  inset: 0;
+  background: url("/assets/images/HomePagebg.png") center / cover no-repeat;
+  filter: blur(3px);
+  transform: scale(1.02);
+}
+
+.verify-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.verify-container {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: clamp(18px, 4vw, 36px);
+}
+
+.form-card {
+  width: min(430px, 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: clamp(20px, 5vw, 30px);
+  background: rgba(255, 253, 249, 0.96);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  backdrop-filter: blur(12px);
+}
+
+.form-card h1 {
+  margin: 0 0 4px;
+  color: var(--ink);
+  font-size: clamp(1.35rem, 5vw, 1.8rem);
+  line-height: 1.12;
+}
+
+.form-card p {
+  margin: 0 0 8px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.input-field {
+  width: 100%;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 14px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+}
+
+.input-field:focus {
+  border-color: rgba(94, 31, 47, 0.55);
+  box-shadow: 0 0 0 3px rgba(94, 31, 47, 0.12);
+}
+
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.submit-btn {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0 12px;
+  background: var(--brand);
+  color: white;
+  cursor: pointer;
+  font-weight: 760;
+}
+
+.submit-btn.secondary {
+  background: #efe8df;
+  color: var(--brand-dark);
+}
+
+@media (max-width: 760px) {
+  .top-bar {
+    justify-content: flex-start;
+  }
+
+  .content-panel {
+    width: calc(100% - 24px);
+    margin: 12px auto;
+    padding: 16px;
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-btn {
+    min-height: 132px;
+  }
+
+  .workspace-panel {
+    height: auto;
+    min-height: 0;
+  }
+
+  .wine-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wine-detail-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .bottle-placeholder {
+    min-height: 220px;
+  }
+
+  .bottle-silhouette {
+    height: 150px;
+  }
+
+  .bottle-silhouette::before {
+    top: -48px;
+    height: 54px;
+  }
+
+  .bottle-silhouette::after {
+    bottom: 46px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .wine-actions {
+    width: 100%;
+  }
+
+  .action-btn {
+    flex: 1;
+  }
+
+  .quantity-pill {
+    white-space: normal;
+  }
+
+  .button-row {
+    grid-template-columns: 1fr;
+  }
+  
+}
