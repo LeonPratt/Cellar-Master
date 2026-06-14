@@ -69,6 +69,15 @@ def getwines():
     return jsonify({"wines": res})
 
 
+@app.route("/pairing-wines")
+def get_pairing_wines():
+    pairing = request.args.get("q", "")
+    conn = dbmanager.connect()
+    res = dbmanager.search_wines_by_pairing(conn, pairing, limit=20)
+    conn.close()
+    return jsonify({"wines": res})
+
+
 @app.route("/upload-photo", methods=["POST"])
 def upload_photo():
     if "photo" not in request.files:

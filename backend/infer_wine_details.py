@@ -124,7 +124,7 @@ def Add_to_cellar(data):
     if wineid == None:
         extra_details = gen_extra_details(data)
         data["tasting_notes"] = extra_details["tasting_notes"]
-        data["food_parings"] = extra_details["food_pairings"].split("|")
+        data["food_pairings"] = extra_details["food_pairings"].split("|")
         data["drink_window_start"] = extra_details["start_year"]
         data["drink_window_end"] = extra_details["end_year"]
         dbmanager.insert_new_wine(conn, data)

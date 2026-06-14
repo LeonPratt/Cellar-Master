@@ -178,13 +178,13 @@ def insert_new_wine(conn, data: dict):
 
 def get_all_pairings_from_wineid(conn, wineid:int):
     cur = conn.cursor()
-    cur.execute("SELECT pairingid FROM wine_pairings WHERE wineid = ?", (wineid))
+    cur.execute("SELECT pairingid FROM wine_pairings WHERE wineid = ?", (wineid,))
     pairingIDs = cur.fetchall()
 
     pairings = []
     for pairingID in pairingIDs:
         id = pairingID[0]
-        cur.execute("SELECT name FROM food_pairings WHERE pairingid = ?", (str(id)))
+        cur.execute("SELECT name FROM food_pairings WHERE pairingid = ?", (id,))
         pairing = cur.fetchone()
         pairings.append(pairing[0])
 
@@ -196,9 +196,70 @@ def get_all_wineids_from_pairing(conn, pairing):
     pairingid = cur.fetchone()
     if pairingid == None:
         return []
-    cur.execute("SELECT wineid FROM WINE_PAIRINGS WHERE pairingid = ?;",(str(pairingid[0]),))
+    cur.execute("""
+        SELECT wp.wineid
+        FROM WINE_PAIRINGS wp
+        INNER JOIN CELLAR c ON wp.wineid = c.wineid
+        WHERE wp.pairingid = ? AND c.quantity > 0;
+    """, (pairingid[0],))
     wineids = cur.fetchall()
     return [x[0] for x in wineids]
+
+
+def search_wines_by_pairing(conn, pairing, limit=20):
+    """
+    Search cellar wines by food pairing name.
+
+    Returns wines that have at least one bottle in the cellar and whose
+    saved food pairing contains the provided search term.
+    """
+
+    search_term = pairing.strip()
+    if search_term == "":
+        return []
+
+    cursor = conn.cursor()
+    search = f"%{search_term}%"
+
+    query = """
+    SELECT
+        w.wineid,
+        w.name,
+        w.year,
+        w.region,
+        c.quantity,
+        GROUP_CONCAT(DISTINCT g.name) AS grapes,
+        GROUP_CONCAT(DISTINCT fp.name) AS matched_pairings
+    FROM WINES w
+    INNER JOIN CELLAR c ON w.wineid = c.wineid
+    INNER JOIN WINE_PAIRINGS wp ON w.wineid = wp.wineid
+    INNER JOIN FOOD_PAIRINGS fp ON wp.pairingid = fp.pairingid
+    LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
+    LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
+    WHERE
+        c.quantity > 0
+        AND fp.name LIKE ?
+    GROUP BY w.wineid
+    ORDER BY w.name
+    LIMIT ?
+    """
+
+    cursor.execute(query, (search, limit))
+    rows = cursor.fetchall()
+
+    wines = []
+    for row in rows:
+        wines.append({
+            "wineid": row[0],
+            "name": row[1],
+            "year": row[2],
+            "region": row[3],
+            "quantity": row[4],
+            "grapes": row[5].split(",") if row[5] else [],
+            "matched_pairings": row[6].split(",") if row[6] else []
+        })
+
+    return wines
 
 
 def search_wines(conn, search_term="", limit=10):
