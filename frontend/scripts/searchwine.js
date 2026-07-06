@@ -4,7 +4,10 @@ const wineList = document.querySelector(".wine-list");
 const searchBox = document.querySelector(".search-box");
 const searchButton = document.querySelector(".search-btn");
 const homeButton = document.querySelector(".nav-btn");
-
+const logo = document.getElementById("home");
+home.addEventListener("click", () => {
+    window.location.href = "/";
+});
 let wines = [];
 
 homeButton.addEventListener("click", () => {
@@ -96,7 +99,7 @@ function renderWines(wineArray) {
         });
 
         wineCard.querySelector(".delete-btn").addEventListener("click", () => {
-            removeWine(wine.name);
+            removeWine(wine.wineid);
         });
 
         wineList.appendChild(wineCard);
@@ -120,18 +123,19 @@ function searchWines() {
     renderWines(filteredWines);
 }
 
-async function removeWine(wineName) {
+async function removeWine(wineId) {
     try {
+        console.log(`Removing wine with ID: ${wineId}`);
         const response = await fetch(
-            `${API_URL}/${encodeURIComponent(wineName)}`,
+            `${API_URL}/${encodeURIComponent(parseInt(wineId))}`,
             { method: "DELETE" }
         );
-
+        console.log(response);
         if (!response.ok) {
             throw new Error("Failed to remove wine");
         }
 
-        wines = wines.filter((wine) => wine.name !== wineName);
+        wines = wines.filter((wine) => wine.wineid !== wineId);
         renderWines(wines);
     }
     catch (error) {

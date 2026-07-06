@@ -5,8 +5,12 @@ const searchBox = document.querySelector(".search-box");
 const searchButton = document.querySelector(".search-btn");
 const summary = document.querySelector(".pairing-summary");
 const homeButton = document.querySelector(".nav-btn");
-
+const logo = document.getElementById("home");
 homeButton.addEventListener("click", () => {
+    window.location.href = "/";
+});
+
+logo.addEventListener("click", () => {
     window.location.href = "/";
 });
 

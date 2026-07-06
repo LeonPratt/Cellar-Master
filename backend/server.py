@@ -67,12 +67,25 @@ def assets(filename):
     return send_from_directory(ASSETS_DIR, filename)
 
 
-@app.route("/wines")
+@app.get("/wines")
 def getwines():
     conn = dbmanager.connect()
     res = dbmanager.search_wines(conn, "", limit=5)
     conn.close()
     return jsonify({"wines": res})
+
+
+@app.delete("/wines/<int:wineid>")
+def delete_wine(wineid):
+    conn = dbmanager.connect()
+    res = dbmanager.remove_wine_from_cellar(conn, int(wineid), -1)
+    conn.close()
+
+
+    if res !=True:
+        return jsonify({"message": "Failed to delete wine"}), 404
+
+    return jsonify({"message": "Wine deleted successfully"})
 
 
 @app.route("/wine/<int:wineid>")
@@ -85,6 +98,78 @@ def get_wine(wineid):
         return jsonify({"message": "Wine not found"}), 404
 
     return jsonify({"wine": res})
+
+
+@app.post("/wine/<int:wineid>/tasting-notes")
+def add_tasting_note(wineid):
+    data = request.get_json(silent=True) or {}
+    note = str(data.get("note", "")).strip()
+
+    if not note:
+        return jsonify({"message": "Tasting note is required"}), 400
+
+    conn = dbmanager.connect()
+    notes = dbmanager.add_tasting_note(conn, wineid, note)
+    conn.close()
+
+    if notes is None:
+        return jsonify({"message": "Wine not found"}), 404
+
+    return jsonify({"tasting_notes": notes})
+
+
+@app.delete("/wine/<int:wineid>/tasting-notes")
+def delete_tasting_note(wineid):
+    data = request.get_json(silent=True) or {}
+    note = str(data.get("note", "")).strip()
+
+    if not note:
+        return jsonify({"message": "Tasting note is required"}), 400
+
+    conn = dbmanager.connect()
+    notes = dbmanager.remove_tasting_note(conn, wineid, note)
+    conn.close()
+
+    if notes is None:
+        return jsonify({"message": "Wine not found"}), 404
+
+    return jsonify({"tasting_notes": notes})
+
+
+@app.post("/wine/<int:wineid>/pairings")
+def add_wine_pairing(wineid):
+    data = request.get_json(silent=True) or {}
+    pairing = str(data.get("pairing", "")).strip()
+
+    if not pairing:
+        return jsonify({"message": "Pairing is required"}), 400
+
+    conn = dbmanager.connect()
+    pairings = dbmanager.add_pairing_to_wine(conn, wineid, pairing)
+    conn.close()
+
+    if pairings is None:
+        return jsonify({"message": "Wine not found"}), 404
+
+    return jsonify({"pairings": pairings})
+
+
+@app.delete("/wine/<int:wineid>/pairings")
+def delete_wine_pairing(wineid):
+    data = request.get_json(silent=True) or {}
+    pairing = str(data.get("pairing", "")).strip()
+
+    if not pairing:
+        return jsonify({"message": "Pairing is required"}), 400
+
+    conn = dbmanager.connect()
+    pairings = dbmanager.remove_pairing_from_wine(conn, wineid, pairing)
+    conn.close()
+
+    if pairings is None:
+        return jsonify({"message": "Wine not found"}), 404
+
+    return jsonify({"pairings": pairings})
 
 
 @app.route("/pairing-wines")
@@ -117,7 +202,7 @@ def upload_photo():
     photo.save(save_path)
 
     try:
-        details = infer_wine_details.infer_basic(save_path, True, local=True)
+        details = infer_wine_details.infer_basic(save_path, False, local=False)
     except Exception:
         return jsonify({
             "message": "The image could not be analyzed. Please try a clearer wine photo.",

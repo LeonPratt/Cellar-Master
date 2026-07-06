@@ -14,7 +14,7 @@ import dbmanager
 from ollama import chat, web_fetch, web_search, Client
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
-def infer_basic(img, testing=False, local=True):
+def infer_basic(img, testing=False, local=False):
     if testing:
         testdict = {
             "name": "The Virgilius",
@@ -83,7 +83,9 @@ def gen_extra_details(wine_details):
                 The start year and end year should a year in relation to the vintage year, eg if a 2000 vintage was good to drink
                 15 to 25 years after production, then start_year and end_year are 2015 and 2025 respectively.
                 This optimal drinking window should be the absolute optimal. It is important that you undershoot the 
-                optimal window than to overshoot it.
+                optimal window than to overshoot it. I recconmend you use the web_search and web_fetch tools to find this information.
+                 Useful websites may include 'https://flagshipwines.co.uk/', 
+                 'https://www.vivino.com/en/' or 'https://www.yalumba.com/'
                 """}]
 
     response_json = ""
@@ -141,13 +143,11 @@ def parseResponse(response):
     }
 
 def Add_to_cellar(data):
-    print("WE ARE HERE")
     conn = dbmanager.connect()
     wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
-    with open("debug_logffff.txt", "a") as f:
-        f.write(f"Received data: {data}\n")
+
     if wineid == None:
-        """
+        
         extra_details = gen_extra_details(data)
         data["tasting_notes"] = extra_details["tasting_notes"]
         data["food_pairings"] = extra_details["food_pairings"].split("|")
@@ -158,8 +158,7 @@ def Add_to_cellar(data):
         data["food_pairings"] = "Roasted chicken|turkey|lamb|steak".split("|")
         data["drink_window_start"] = "2015"
         data["drink_window_end"] = "2025"
-        with open("debug_logaaaaa.txt", "a") as f:
-            f.write(f"Received data: {data}\n")
+        """
         dbmanager.insert_new_wine(conn, data)
 
     else:

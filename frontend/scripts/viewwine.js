@@ -10,10 +10,19 @@ const quantityEl = document.querySelector("[data-wine-quantity]");
 const drinkstartEl = document.querySelector("[data-wine-drink-start]");
 const drinkendEl = document.querySelector("[data-wine-drink-end]");
 const tastingNotesEl = document.querySelector("[data-wine-tasting-notes]");
+const tastingNoteForm = document.querySelector("[data-tasting-note-form]");
+const tastingNoteInput = document.querySelector("[data-tasting-note-input]");
+const tastingNoteStatus = document.querySelector("[data-tasting-note-status]");
 const pairingsEl = document.querySelector("[data-wine-pairings]");
+const pairingForm = document.querySelector("[data-pairing-form]");
+const pairingInput = document.querySelector("[data-pairing-input]");
+const pairingStatus = document.querySelector("[data-pairing-status]");
 const imageEl = document.querySelector("[data-wine-image]");
 const backButton = document.querySelector("[data-back-button]");
 const homeButton = document.querySelector("[data-home-button]");
+
+let currentTastingNotes = [];
+let currentPairings = [];
 
 backButton.addEventListener("click", () => {
     window.location.href = "/search";
@@ -40,22 +49,35 @@ function formatList(items, fallback) {
 }
 
 function formatTastingNotes(value) {
+    if (Array.isArray(value)) {
+        return value
+            .map((note) => String(note ?? "").trim())
+            .filter(Boolean);
+    }
+
     const notes = String(value ?? "")
         .split("|")
         .map((note) => note.trim())
         .filter(Boolean);
 
-    if (notes.length === 0) {
-        return "No tasting notes saved yet.";
-    }
+    return notes;
+}
 
-    return notes.map(capitalize).join(", ");
+function setTastingNoteStatus(message, isError = false) {
+    tastingNoteStatus.textContent = message;
+    tastingNoteStatus.classList.toggle("is-error", isError);
+}
+
+function setPairingStatus(message, isError = false) {
+    pairingStatus.textContent = message;
+    pairingStatus.classList.toggle("is-error", isError);
 }
 
 function renderPairings(pairings) {
     pairingsEl.innerHTML = "";
+    currentPairings = Array.isArray(pairings) ? pairings : [];
 
-    if (!Array.isArray(pairings) || pairings.length === 0) {
+    if (currentPairings.length === 0) {
         const empty = document.createElement("span");
         empty.className = "detail-empty";
         empty.textContent = "No pairings saved yet.";
@@ -63,13 +85,252 @@ function renderPairings(pairings) {
         return;
     }
 
-    pairings.forEach((pairing) => {
+    currentPairings.forEach((pairing) => {
         const tag = document.createElement("span");
         tag.className = "pairing-tag";
-        tag.textContent = capitalize(pairing);
+
+        const text = document.createElement("span");
+        text.textContent = capitalize(pairing);
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "pairing-remove";
+        removeButton.type = "button";
+        removeButton.dataset.pairing = pairing;
+        removeButton.setAttribute("aria-label", `Remove ${pairing}`);
+
+        const removeIcon = document.createElement("img");
+        removeIcon.className = "tasting-note-remove-icon";
+        removeIcon.setAttribute("src", "/assets/icons/remove.svg");
+        removeButton.appendChild(removeIcon);
+
+        tag.append(text, removeButton);
         pairingsEl.appendChild(tag);
     });
 }
+
+function renderTastingNotes(notes) {
+    tastingNotesEl.innerHTML = "";
+    currentTastingNotes = Array.isArray(notes) ? notes : [];
+
+    if (currentTastingNotes.length === 0) {
+        const empty = document.createElement("span");
+        empty.className = "detail-empty";
+        empty.textContent = "No notes saved yet.";
+        tastingNotesEl.appendChild(empty);
+        return;
+    }
+
+    currentTastingNotes.forEach((note) => {
+        const tag = document.createElement("span");
+        tag.className = "tasting-note-tag";
+
+        const text = document.createElement("span");
+        text.textContent = capitalize(note);
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "tasting-note-remove";
+        removeButton.type = "button";
+        removeButton.dataset.note = note;
+        removeButton.setAttribute("aria-label", `Remove ${note}`);
+        const removeIcon = document.createElement("img");
+        removeIcon.className = "tasting-note-remove-icon";
+        removeIcon.setAttribute("src", "/assets/icons/remove.svg");
+        removeButton.appendChild(removeIcon);
+
+        tag.append(text, removeButton);
+        tastingNotesEl.appendChild(tag);
+    });
+}
+
+function setTastingNoteControlsDisabled(disabled) {
+    tastingNoteInput.disabled = disabled;
+    tastingNoteForm.querySelector("button").disabled = disabled;
+    tastingNotesEl
+        .querySelectorAll("button")
+        .forEach((button) => {
+            button.disabled = disabled;
+        });
+}
+
+function setPairingControlsDisabled(disabled) {
+    pairingInput.disabled = disabled;
+    pairingForm.querySelector("button").disabled = disabled;
+    pairingsEl
+        .querySelectorAll("button")
+        .forEach((button) => {
+            button.disabled = disabled;
+        });
+}
+
+async function saveTastingNote(note) {
+    const response = await fetch(`/wine/${encodeURIComponent(wineId)}/tasting-notes`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ note })
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to add tasting note");
+    }
+
+    return response.json();
+}
+
+async function deleteTastingNote(note) {
+    const response = await fetch(`/wine/${encodeURIComponent(wineId)}/tasting-notes`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ note })
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to remove tasting note");
+    }
+
+    return response.json();
+}
+
+async function savePairing(pairing) {
+    const response = await fetch(`/wine/${encodeURIComponent(wineId)}/pairings`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ pairing })
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to add pairing");
+    }
+
+    return response.json();
+}
+
+async function deletePairing(pairing) {
+    const response = await fetch(`/wine/${encodeURIComponent(wineId)}/pairings`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ pairing })
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to remove pairing");
+    }
+
+    return response.json();
+}
+
+tastingNoteForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const note = tastingNoteInput.value.trim();
+    if (!note) {
+        setTastingNoteStatus("Enter a tasting note before adding it.", true);
+        return;
+    }
+
+    setTastingNoteControlsDisabled(true);
+    setTastingNoteStatus("Saving note...");
+
+    try {
+        const data = await saveTastingNote(note);
+        tastingNoteInput.value = "";
+        renderTastingNotes(data.tasting_notes);
+        setTastingNoteStatus("Note saved.");
+    }
+    catch (error) {
+        console.error(error);
+        setTastingNoteStatus("The note could not be saved.", true);
+    }
+    finally {
+        setTastingNoteControlsDisabled(false);
+        tastingNoteInput.focus();
+    }
+});
+
+pairingForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const pairing = pairingInput.value.trim();
+    if (!pairing) {
+        setPairingStatus("Enter a pairing before adding it.", true);
+        return;
+    }
+
+    setPairingControlsDisabled(true);
+    setPairingStatus("Saving pairing...");
+
+    try {
+        const data = await savePairing(pairing);
+        pairingInput.value = "";
+        renderPairings(data.pairings);
+        setPairingStatus("Pairing saved.");
+    }
+    catch (error) {
+        console.error(error);
+        setPairingStatus("The pairing could not be saved.", true);
+    }
+    finally {
+        setPairingControlsDisabled(false);
+        pairingInput.focus();
+    }
+});
+
+tastingNotesEl.addEventListener("click", async (event) => {
+    const removeButton = event.target.closest("[data-note]");
+
+    if (!removeButton) {
+        return;
+    }
+
+    const note = removeButton.dataset.note;
+    setTastingNoteControlsDisabled(true);
+    setTastingNoteStatus("Removing note...");
+
+    try {
+        const data = await deleteTastingNote(note);
+        renderTastingNotes(data.tasting_notes);
+        setTastingNoteStatus("Note removed.");
+    }
+    catch (error) {
+        console.error(error);
+        setTastingNoteStatus("The note could not be removed.", true);
+    }
+    finally {
+        setTastingNoteControlsDisabled(false);
+    }
+});
+
+pairingsEl.addEventListener("click", async (event) => {
+    const removeButton = event.target.closest("[data-pairing]");
+
+    if (!removeButton) {
+        return;
+    }
+
+    const pairing = removeButton.dataset.pairing;
+    setPairingControlsDisabled(true);
+    setPairingStatus("Removing pairing...");
+
+    try {
+        const data = await deletePairing(pairing);
+        renderPairings(data.pairings);
+        setPairingStatus("Pairing removed.");
+    }
+    catch (error) {
+        console.error(error);
+        setPairingStatus("The pairing could not be removed.", true);
+    }
+    finally {
+        setPairingControlsDisabled(false);
+    }
+});
 
 function getImageSrc(imgpath) {
     const path = String(imgpath ?? "").trim();
@@ -109,9 +370,9 @@ function renderError(title, detail) {
     quantityEl.textContent = "Unknown";
     drinkstartEl.textContent = "Unknown";
     drinkendEl.textContent = "Unknown";
-    tastingNotesEl.textContent = "No tasting notes available.";
     renderImage({});
     renderPairings([]);
+    renderTastingNotes([]);
 }
 
 function renderWine(wine) {
@@ -130,9 +391,9 @@ function renderWine(wine) {
     quantityEl.textContent = quantity;
     drinkstartEl.textContent = drinkStart;
     drinkendEl.textContent = drinkEnd;
-    tastingNotesEl.textContent = formatTastingNotes(wine.tasting_notes);
     renderImage(wine);
     renderPairings(wine.pairings);
+    renderTastingNotes(formatTastingNotes(wine.tasting_notes));
 }
 
 async function loadWine() {
@@ -149,7 +410,6 @@ async function loadWine() {
         }
 
         const data = await response.json();
-        console.log("Wine data:", data);
         renderWine(data.wine);
     }
     catch (error) {

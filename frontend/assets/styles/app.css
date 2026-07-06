@@ -199,9 +199,9 @@ button.top-bar {
 }
 
 .menu-icon img {
-  width: 26px;
-  height: 26px;
-  display: block;
+  width: 100%;
+  height: 100%;
+  display: block;  
 }
 
 .menu-icon.plus {
@@ -379,6 +379,28 @@ button.top-bar {
 .quantity-pill {
   background: #efe8df;
   color: var(--brand-dark);
+}
+
+
+.tasting-note-remove-icon {
+  width: 300%;
+  height: 300%;
+  display: block;
+}
+.tasting-notes-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.tasting-note-tag {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #f4eee6;
+  color: var(--brand-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .pairing-tags {
@@ -574,6 +596,87 @@ button.top-bar {
   gap: 8px;
 }
 
+.tasting-note-form,
+.pairing-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.tasting-note-input,
+.pairing-input {
+  min-width: 0;
+  height: 40px;
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+}
+
+.tasting-note-input:focus,
+.pairing-input:focus {
+  border-color: rgba(94, 31, 47, 0.55);
+  box-shadow: 0 0 0 3px rgba(94, 31, 47, 0.12);
+}
+
+.tasting-note-add,
+.pairing-add {
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0 14px;
+  background: var(--brand);
+  color: white;
+  cursor: pointer;
+  font-weight: 760;
+}
+
+.tasting-note-tag,
+.pairing-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tasting-note-remove,
+.pairing-remove {
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 50%;
+
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tasting-note-add:disabled,
+.tasting-note-input:disabled,
+.tasting-note-remove:disabled,
+.pairing-add:disabled,
+.pairing-input:disabled,
+.pairing-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.note-status {
+  min-height: 1.2rem;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.note-status.is-error {
+  color: var(--danger);
+}
+
 .detail-empty {
   color: var(--muted);
 }
@@ -641,6 +744,10 @@ button.top-bar {
   border: 0;
   background: none;
   cursor: pointer;
+}
+
+.icon-returnarrow{
+width:90px;
 }
 
 #switchCameraButton {

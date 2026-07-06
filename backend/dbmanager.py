@@ -61,8 +61,12 @@ def wine_exists(conn, name, year):
     row = cur.fetchone()
     return row[0] if row else None
 
-def remove_wine_from_cellar(conn, wineid:int, quantity:int):
+def remove_wine_from_cellar(conn, wineid:int, quantity:int = -1):
     cur = conn.cursor()
+    if quantity == -1:
+        cur.execute(
+            "DELETE FROM CELLAR WHERE wineid = ?;",
+            (str(wineid),))
     cur.execute(
         "UPDATE CELLAR SET quantity = quantity - ? WHERE wineid = ?;",
         (quantity, wineid))
@@ -70,6 +74,8 @@ def remove_wine_from_cellar(conn, wineid:int, quantity:int):
         "DELETE FROM CELLAR WHERE wineid = ? AND quantity <= 0;",
         (str(wineid),))
     conn.commit()
+
+    return True
 
 def get_qty_in_cellar(conn,wineid:int):
     cur = conn.cursor()
@@ -195,6 +201,49 @@ def get_all_pairings_from_wineid(conn, wineid:int):
         pairings.append(pairing[0])
 
     return pairings
+
+
+def wine_id_exists(conn, wineid: int):
+    cur = conn.cursor()
+    cur.execute("SELECT wineid FROM wines WHERE wineid = ?", (wineid,))
+    return cur.fetchone() is not None
+
+
+def add_pairing_to_wine(conn, wineid: int, pairing: str):
+    if not wine_id_exists(conn, wineid):
+        return None
+
+    cleaned_pairing = str(pairing or "").strip()
+    if not cleaned_pairing:
+        return get_all_pairings_from_wineid(conn, wineid)
+
+    cur = conn.cursor()
+    pairing_id = get_or_create_pairing(conn, cleaned_pairing)
+    cur.execute("""
+        INSERT OR IGNORE INTO wine_pairings (wineid, pairingid)
+        VALUES (?, ?)
+    """, (wineid, pairing_id))
+    conn.commit()
+    return get_all_pairings_from_wineid(conn, wineid)
+
+
+def remove_pairing_from_wine(conn, wineid: int, pairing: str):
+    if not wine_id_exists(conn, wineid):
+        return None
+
+    cleaned_pairing = str(pairing or "").strip()
+    cur = conn.cursor()
+    cur.execute("SELECT pairingid FROM food_pairings WHERE LOWER(name) = LOWER(?)", (cleaned_pairing,))
+    row = cur.fetchone()
+
+    if row:
+        cur.execute("""
+            DELETE FROM wine_pairings
+            WHERE wineid = ? AND pairingid = ?
+        """, (wineid, row[0]))
+        conn.commit()
+
+    return get_all_pairings_from_wineid(conn, wineid)
 
 def get_all_wineids_from_pairing(conn, pairing):
     cur = conn.cursor()
@@ -399,6 +448,67 @@ def get_wine_by_id(conn, wineid: int):
         "drink_window_start": row[9] if row[9] else "Unknown",
         "drink_window_end": row[10] if row[10] else "Unknown"
     }
+
+
+def get_tasting_notes(conn, wineid: int):
+    cursor = conn.cursor()
+    cursor.execute("SELECT tasting_notes FROM wines WHERE wineid = ?", (wineid,))
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    return [
+        note.strip()
+        for note in str(row[0] or "").split("|")
+        if note.strip()
+    ]
+
+
+def update_tasting_notes(conn, wineid: int, notes):
+    cursor = conn.cursor()
+    cursor.execute("SELECT wineid FROM wines WHERE wineid = ?", (wineid,))
+
+    if not cursor.fetchone():
+        return None
+
+    cleaned_notes = []
+    for note in notes:
+        cleaned = str(note or "").replace("|", " ").strip()
+        if cleaned and cleaned not in cleaned_notes:
+            cleaned_notes.append(cleaned)
+
+    cursor.execute(
+        "UPDATE wines SET tasting_notes = ? WHERE wineid = ?",
+        ("|".join(cleaned_notes), wineid)
+    )
+    conn.commit()
+    return cleaned_notes
+
+
+def add_tasting_note(conn, wineid: int, note: str):
+    existing_notes = get_tasting_notes(conn, wineid)
+
+    if existing_notes is None:
+        return None
+
+    return update_tasting_notes(conn, wineid, [*existing_notes, note])
+
+
+def remove_tasting_note(conn, wineid: int, note: str):
+    existing_notes = get_tasting_notes(conn, wineid)
+
+    if existing_notes is None:
+        return None
+
+    note_to_remove = str(note or "").strip().lower()
+    remaining_notes = [
+        existing_note
+        for existing_note in existing_notes
+        if existing_note.lower() != note_to_remove
+    ]
+
+    return update_tasting_notes(conn, wineid, remaining_notes)
 
 
 if __name__ == "__main__":
