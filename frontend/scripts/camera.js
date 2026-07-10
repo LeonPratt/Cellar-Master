@@ -16,8 +16,9 @@ let currentFacingMode = 'environment';
 let capturedBlob = null;
 
 function updateStatus(message, isError = false) {
-  statusText.textContent = message;
-  statusText.style.color = isError ? '#ff6b6b' : '#f1f1f1';
+  //statusText.textContent = message;
+  //statusText.style.color = isError ? '#ff6b6b' : '#f1f1f1';
+  console.log(`Status: ${message}`);
 }
 
 function showErrorPopup(message) {

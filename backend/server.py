@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from pathlib import Path
-
+import sys
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
@@ -15,7 +15,7 @@ PAGES_DIR = FRONTEND_DIR / "pages"
 SCRIPTS_DIR = FRONTEND_DIR / "scripts"
 ASSETS_DIR = FRONTEND_DIR / "assets"
 UPLOAD_DIR = ROOT_DIR / "uploads"
-
+localInfer = False
 load_dotenv(ROOT_DIR / ".env")
 
 UPLOAD_DIR.mkdir(exist_ok=True)
@@ -65,6 +65,12 @@ def scripts(filename):
 @app.route("/assets/<path:filename>")
 def assets(filename):
     return send_from_directory(ASSETS_DIR, filename)
+
+
+@app.route("/apple-touch-icon.png")
+@app.route("/apple-touch-icon-precomposed.png")
+def apple_touch_icon():
+    return send_from_directory(ASSETS_DIR / "images", "icon.png")
 
 
 @app.get("/wines")
@@ -202,7 +208,7 @@ def upload_photo():
     photo.save(save_path)
 
     try:
-        details = infer_wine_details.infer_basic(save_path, False, local=False)
+        details = infer_wine_details.infer_basic(save_path, False, local=localInfer)
     except Exception:
         return jsonify({
             "message": "The image could not be analyzed. Please try a clearer wine photo.",
@@ -256,4 +262,7 @@ def run_app():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "--local":
+        localInfer = True
+
     run_app()

@@ -1,24 +1,29 @@
 # Cellar Master
 
-Cellar Master is a simple wine cellar app that helps you keep track of the bottles you own, discover pairings, and remember details about each wine.
+CellarMaster is a wine cellar tracking app that makes it easy to keep track of the bottles you own, discover pairings, and store details about each wine. The app automatically extracts tasting notes, food pairing ideas and optimal drinking windows.
 
 It is designed to feel easy and practical, whether you are building a personal collection or just want a better way to remember wines you have tried.
 
 ## What this app does
 
 - Save wines to a personal cellar
-- Add tasting notes and food pairings
+- Automatically adds tasting notes and food pairings
 - Search your collection quickly
-- Use a photo of a wine label to help identify a bottle
+- Use a photo of a wine label to identify a bottle
 - Browse wines that fit a meal or occasion
 
-## How it works
+## Usage
 
-The app has a lightweight web interface where you can explore your wines and add new ones. The backend handles requests, stores wine information in a local database, and supports features such as searching, pairing suggestions, and photo-based wine recognition.
+- Open the web app in your browser
+- Select 'Add or Remove wine'
+- Take a photo of a bottle
+- Verify the extracted details are correct
+- Select 'add' to add to wine cellar or 'remove' to remove from wine cellar
+
 
 ## Database schema
 
-The app uses a small database to store wines, notes, and pairing information.
+The app uses a database to store wines, notes, and pairing information.
 
 ![Database schema](backend/mermaid-diagram.png)
 
@@ -40,4 +45,3 @@ The app uses a small database to store wines, notes, and pairing information.
 5. Open the app in your browser.
 6. Begin adding wines, notes, and pairings to your cellar.
 
-This project is a simple web app built with a Flask backend and a lightweight front end, with data stored locally in a database.

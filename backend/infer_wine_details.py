@@ -30,7 +30,24 @@ def infer_basic(img, testing=False, local=False):
                 messages=[
                     {
                     'role': 'user',
-                    'content': 'look at this image of a wine bottle. Extract the name of the wine, the year it was produced, the grape variety, and the region it was produced in. If you cannot find any of this information, say "unknown". Return the information in a JSON format with the following structure: {"name": "name of the wine", "year": "year it was produced", "grape_variety": "grape variety", "region": "region it was produced in"}. If the year is unknown return 0 for the year.',
+                    'content': """
+                    Look at the wine bottle image.
+
+                    Extract the following fields exactly as they appear on the label:
+
+                    - producer: The winery or brand name.
+                    - wine_name: The specific wine/cuvée name, excluding producer.
+                    - vintage: The year.
+                    - grape_variety: The grape(s).
+                    - region: The wine region.
+
+                    Important:
+                    - Do not combine producer and wine name.
+                    - Do not infer missing information.
+                    - Do not rewrite names.
+                    - Preserve the exact spelling and punctuation from the label.
+                    - If a field is not visible, return "unknown".
+                    - Return only JSON.""",
                     'images': [img]
                     }
                 ]
@@ -55,7 +72,7 @@ def infer_basic(img, testing=False, local=False):
             'images': [img]
         },
         ]
-        for part in client.chat('gemma3:4b-cloud', messages=messages, stream=True):
+        for part in client.chat('gemma4:31b-cloud', messages=messages, stream=True):
             response += part['message']['content']
     return parseResponse(response)
 
@@ -69,24 +86,72 @@ def gen_extra_details(wine_details):
 
     available_tools = {'web_search': client.web_search, 'web_fetch': client.web_fetch}
 
-    messages = [{'role': 'user', 'content': f"""Look at the following wine: {wine_details}. 
-                Your job is to return taste notes, food pairings, as well as its optimum drinking window. 
-                If you cannot find any of this information, say "unknown". 
-                Return the information in a JSON format with the following structure: 
-                {{"tasting_notes": "tasting notes for the wine", 
-                "food_pairings": "food pairings for the wine", 
-                "start_year": "start of optimum drinking window (in years after release)",
-                "end_year": "end of optimum drinking window (in years after release)"}}.
-                tasting_notes and food_pairings should be list form separated by: |.
-                each item in the list should be no more than 3 words long.
-                eg "tasting_notes":"peach|stone fruit|oak","food_pairings":"Roasted chicken|turkey|lamb|steak"
-                The start year and end year should a year in relation to the vintage year, eg if a 2000 vintage was good to drink
-                15 to 25 years after production, then start_year and end_year are 2015 and 2025 respectively.
-                This optimal drinking window should be the absolute optimal. It is important that you undershoot the 
-                optimal window than to overshoot it. I recconmend you use the web_search and web_fetch tools to find this information.
-                 Useful websites may include 'https://flagshipwines.co.uk/', 
-                 'https://www.vivino.com/en/' or 'https://www.yalumba.com/'
-                """}]
+    messages = [{
+        "role": "user",
+        "content": f"""
+    You are a professional wine researcher and sommelier.
+
+    Wine details:
+    {wine_details}
+
+    Your task is to identify the EXACT wine and vintage using the information above, then determine:
+
+    1. Typical tasting notes.
+    2. Recommended food pairings.
+    3. The optimum drinking window.
+
+    Research requirements:
+    - Use web_search first.
+    - Use web_fetch on the most relevant sources.
+    - Prioritise official producer websites.
+    - Then use reputable wine merchants or critics.
+    - Use CellarTracker and Vivino only as supporting evidence.
+    - If multiple trustworthy sources disagree, use the consensus.
+    - Never invent information.
+    - If you cannot determine a field with reasonable confidence, return "unknown".
+
+    Important:
+    - Ensure the tasting notes and drinking window correspond to the SAME vintage whenever possible.
+    - If no information exists for the exact vintage, use the nearest available vintage ONLY if the producer, wine and blend are effectively unchanged.
+    - If you use another vintage, account for the age difference when estimating the drinking window.
+
+    The drinking window should represent the period when the wine is at its absolute peak, NOT the entire period during which it is drinkable.
+
+    If uncertain, err on the side of an EARLIER end date rather than a later one.
+
+    Formatting rules:
+
+    Return ONLY valid JSON.
+
+    {{
+        "tasting_notes": "...",
+        "food_pairings": "...",
+        "start_year": 0,
+        "end_year": 0
+    }}
+
+    Rules:
+    - tasting_notes is a "|" separated list.
+    - food_pairings is a "|" separated list.
+    - Every item must contain at most three words.
+    - Include between 5 and 12 tasting notes.
+    - Include between 4 and 10 food pairings.
+    - Do not include duplicate items.
+    - Do not include explanations.
+    - Do not include markdown.
+    - start_year and end_year must be four-digit calendar years.
+    - If any field cannot be determined confidently, return "unknown" for that field.
+
+    Example:
+
+    {{
+        "tasting_notes":"blackcurrant|cedar|graphite|violet|cigar box|firm tannins",
+        "food_pairings":"roast lamb|ribeye steak|venison|aged cheddar",
+        "start_year":2028,
+        "end_year":2042
+    }}
+    """
+    }]
 
     response_json = ""
     while True:
@@ -110,7 +175,6 @@ def gen_extra_details(wine_details):
             args = tool_call.function.arguments
             result = function_to_call(**args)
             print('Result: ', str(result)[:200]+'...')
-            # Result is truncated for limited context lengths
             messages.append({'role': 'tool', 'content': str(result)[:2000 * 4], 'tool_name': tool_call.function.name})
           else:
             messages.append({'role': 'tool', 'content': f'Tool {tool_call.function.name} not found', 'tool_name': tool_call.function.name})
@@ -168,7 +232,7 @@ def Add_to_cellar(data):
 def Remove_from_cellar(data):
     conn = dbmanager.connect()
 
-    wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
+    wineid = dbmanager.fuzzy_wine_exists(conn, data)
 
     if wineid == None:
        print("wine does not exist")
