@@ -1,1 +1,0 @@
-![Database architecture](dbarch.png)

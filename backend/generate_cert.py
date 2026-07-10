@@ -18,8 +18,8 @@ subject = issuer = x509.Name([
     x509.NameAttribute(NameOID.COUNTRY_NAME, 'UK'),
     x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, 'Cambridgeshire'),
     x509.NameAttribute(NameOID.LOCALITY_NAME, 'Cambridge'),
-    x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'Vinum'),
-    x509.NameAttribute(NameOID.COMMON_NAME, 'localhost'),
+    x509.NameAttribute(NameOID.ORGANIZATION_NAME, 'CellarMaster'),
+    x509.NameAttribute(NameOID.COMMON_NAME, 'CellarMaster'),
 ])
 cert = (
     x509.CertificateBuilder()
@@ -29,7 +29,7 @@ cert = (
     .serial_number(x509.random_serial_number())
     .not_valid_before(datetime.utcnow() - timedelta(days=1))
     .not_valid_after(datetime.utcnow() + timedelta(days=3650))
-    .add_extension(x509.SubjectAlternativeName([x509.DNSName('localhost')]), critical=False)
+    .add_extension(x509.SubjectAlternativeName([x509.DNSName('CellarMaster')]), critical=False)
     .sign(key, hashes.SHA256())
 )
 

@@ -266,9 +266,21 @@ button.top-bar {
   border-color: rgba(94, 31, 47, 0.55);
   box-shadow: 0 0 0 3px rgba(94, 31, 47, 0.12);
 }
-
+.search-btn {
+  width: 56px;
+  height: 52px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--brand);
+  color: white;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--soft-shadow);
+  transition: transform 160ms ease, background 160ms ease;
+}
 .search-box {
-  min-width: 0;
+  min-width: 180px;
   height: 52px;
   flex: 1;
   border: 1px solid var(--border);
@@ -637,11 +649,12 @@ input:checked + .slider:before {
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
 .detail-stat {
+  min-width: 100px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: #fff;

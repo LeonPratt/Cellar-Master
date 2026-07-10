@@ -33,6 +33,16 @@ def index():
     return send_page("home.html")
 
 
+@app.route("/apple-touch-icon.png")
+@app.route("/apple-touch-icon-precomposed.png")
+def apple_touch_icon():
+    return send_from_directory(ASSETS_DIR / "images", "apple-touch-icon.png")
+
+@app.route("/favicon.ico")
+def favicon():
+    return send_from_directory(ASSETS_DIR / "images", "favicon.ico")
+
+
 @app.route("/search")
 def search_wines():
     return send_page("searchwine.html")
@@ -67,17 +77,10 @@ def scripts(filename):
 def assets(filename):
     return send_from_directory(ASSETS_DIR, filename)
 
-
-@app.route("/apple-touch-icon.png")
-@app.route("/apple-touch-icon-precomposed.png")
-def apple_touch_icon():
-    return send_from_directory(ASSETS_DIR / "images", "icon.png")
-
-
 @app.get("/wines")
 def getwines():
     conn = dbmanager.connect()
-    res = dbmanager.search_wines(conn, "", limit=5)
+    res = dbmanager.search_wines(conn, "", limit=5, in_cellar_only=1)
     conn.close()
     return jsonify({"wines": res})
 
