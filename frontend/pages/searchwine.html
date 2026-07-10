@@ -22,10 +22,13 @@
           placeholder="Search by name, grape, region or year"
           autocomplete="off"
         />
-
-        <button class="search-btn" type="button" aria-label="Search wines">
-          <img src="/assets/icons/searchicon.svg" alt="" />
-        </button>
+        <label class="cellar-filter">
+          <span class="cellar-filter-label">Only show wines in my cellar</span>
+          <span class="switch">
+            <input type="checkbox" class="in-cellar-only">
+            <span class="slider round" aria-hidden="true"></span>
+          </span>
+        </label>
       </div>
 
       <div class="wine-list"></div>

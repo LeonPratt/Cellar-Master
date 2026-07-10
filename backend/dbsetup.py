@@ -22,6 +22,7 @@ def create_tables(conn):
         year INTEGER,
         region TEXT,
         tasting_notes TEXT,
+        Custom_notes TEXT,
         image_path TEXT
     );
     """)

@@ -242,6 +242,31 @@ button.top-bar {
   gap: 10px;
 }
 
+.cellar-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 52px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  user-select: none;
+}
+
+.cellar-filter-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.cellar-filter:has(input:focus-visible) {
+  border-color: rgba(94, 31, 47, 0.55);
+  box-shadow: 0 0 0 3px rgba(94, 31, 47, 0.12);
+}
+
 .search-box {
   min-width: 0;
   height: 52px;
@@ -264,28 +289,66 @@ button.top-bar {
   box-shadow: 0 0 0 3px rgba(94, 31, 47, 0.12);
 }
 
-.search-btn {
-  width: 56px;
-  height: 52px;
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--brand);
-  color: white;
+.switch {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
   cursor: pointer;
-  display: grid;
-  place-items: center;
-  box-shadow: var(--soft-shadow);
-  transition: transform 160ms ease, background 160ms ease;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
 }
 
-.search-btn:hover {
-  transform: translateY(-1px);
-  background: var(--brand-dark);
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
 }
 
-.search-btn img {
-  width: 22px;
-  height: 22px;
+input:checked + .slider {
+  background-color: rgba(94, 31, 47, 1);;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px rgba(94, 31, 47, 1);;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
 }
 
 .pairing-summary {
@@ -476,10 +539,35 @@ button.top-bar {
 }
 
 .bottle-image {
-  width: 100%;
+  width: auto;
+  height: auto;
+  max-width: min(100%, 280px);
   max-height: 430px;
   object-fit: contain;
   display: block;
+}
+
+/* Once a bottle photo is available, let the frame shrink-wrap it rather than
+   retaining the fixed placeholder dimensions. */
+.bottle-placeholder:has(.bottle-image:not([hidden])) {
+  position: relative;
+  justify-self: start;
+  align-self: start;
+  min-height: 0;
+  width: fit-content;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.bottle-placeholder:has(.bottle-image:not([hidden]))::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px dashed rgba(94, 31, 47, 0.32);
+  border-radius: var(--radius);
+  pointer-events: none;
 }
 
 .bottle-image:not([hidden]) + .bottle-silhouette {
@@ -532,10 +620,13 @@ button.top-bar {
 }
 
 .wine-detail-title {
+  border: None;
+  background:transparent;
   margin: 0;
   color: var(--ink);
   font-size: clamp(1.8rem, 5vw, 3rem);
   line-height: 1.05;
+  font-weight: 600;
 }
 
 .wine-detail-subtitle {
@@ -568,7 +659,10 @@ button.top-bar {
 }
 
 .detail-value {
+  border:none;
+  margin: 0;
   color: var(--ink);
+  width:100%;
   font-weight: 760;
   line-height: 1.35;
 }
@@ -597,14 +691,17 @@ button.top-bar {
 }
 
 .tasting-note-form,
-.pairing-form {
+.pairing-form,
+.custom-note-form {
   display: flex;
+  align-items: flex-start;
   gap: 8px;
   margin-bottom: 10px;
 }
 
 .tasting-note-input,
-.pairing-input {
+.pairing-input,
+.custom-note-input {
   min-width: 0;
   height: 40px;
   flex: 1;
@@ -617,13 +714,26 @@ button.top-bar {
 }
 
 .tasting-note-input:focus,
-.pairing-input:focus {
+.pairing-input:focus,
+.custom-note-input:focus {
   border-color: rgba(94, 31, 47, 0.55);
   box-shadow: 0 0 0 3px rgba(94, 31, 47, 0.12);
 }
 
 .tasting-note-add,
-.pairing-add {
+.pairing-add,
+.custom-note-update {
+  height: 40px;
+  border: 0;
+  border-radius: var(--radius);
+  padding: 0 14px;
+  background: var(--brand);
+  color: white;
+  cursor: pointer;
+  font-weight: 760;
+}
+
+.general-update {
   height: 40px;
   border: 0;
   border-radius: var(--radius);
@@ -661,9 +771,22 @@ button.top-bar {
 .tasting-note-remove:disabled,
 .pairing-add:disabled,
 .pairing-input:disabled,
-.pairing-remove:disabled {
+.pairing-remove:disabled,
+.custom-note-update:disabled,
+.custom-note-input:disabled {
   cursor: not-allowed;
   opacity: 0.62;
+}
+
+.custom-note-input {
+  min-height: 40px;
+  max-height: 240px;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  resize: none;
+  overflow-y: auto;
+  font: inherit;
+  line-height: 1.35;
 }
 
 .note-status {
@@ -1014,6 +1137,10 @@ width:90px;
     min-height: 220px;
   }
 
+  .bottle-placeholder:has(.bottle-image:not([hidden])) {
+    min-height: 0;
+  }
+
   .bottle-silhouette {
     height: 150px;
   }
@@ -1027,7 +1154,7 @@ width:90px;
     bottom: 46px;
   }
 
-  .detail-grid {
+  .general-detail-form {
     grid-template-columns: 1fr;
   }
 

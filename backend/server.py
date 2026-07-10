@@ -106,6 +106,45 @@ def get_wine(wineid):
 
     return jsonify({"wine": res})
 
+@app.post("/wine/<int:wineid>/general-data")
+def update_general_data(wineid):
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", "")).strip()
+    region = str(data.get("region", "")).strip()
+    grapes = data.get("grapes",[])
+    year = data.get("year", None)
+    quantity = data.get("quantity", None)
+    drink_start = data.get("drink_window_start", 0)
+    drink_end = data.get("drink_window_end", 0)
+    with open("debug_log.txt", "a") as f:
+        f.write(f"Received data for wineid {wineid}: name={name}, region={region}, grapes={grapes}, year={year}, quantity={quantity}, drink_start={drink_start}, drink_end={drink_end}\n")
+    conn = dbmanager.connect()
+    updated_wine = dbmanager.update_general_data(conn, wineid, name, region, grapes, year, quantity, drink_start, drink_end)
+
+    if updated_wine is None:
+        return jsonify({"message": "Wine not found"}), 404
+
+
+    res = dbmanager.get_wine_by_id(conn, wineid)
+    conn.close()
+
+    return jsonify({"wine": res}), 200
+
+@app.post("/wine/<int:wineid>/custom-note")
+def update_custom_notes(wineid):
+    data = request.get_json(silent=True) or {}
+
+    notes = str(data.get("note", "")).strip()
+
+    conn = dbmanager.connect()
+    updated_notes = dbmanager.update_custom_notes(conn, wineid, notes)
+    conn.close()
+
+    if updated_notes is None:
+        return jsonify({"message": "Wine not found"}), 404
+
+    return jsonify({"custom_notes": updated_notes})
+
 
 @app.post("/wine/<int:wineid>/tasting-notes")
 def add_tasting_note(wineid):

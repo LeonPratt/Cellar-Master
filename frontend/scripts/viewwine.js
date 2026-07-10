@@ -9,6 +9,9 @@ const yearEl = document.querySelector("[data-wine-year]");
 const quantityEl = document.querySelector("[data-wine-quantity]");
 const drinkstartEl = document.querySelector("[data-wine-drink-start]");
 const drinkendEl = document.querySelector("[data-wine-drink-end]");
+const generalDataForm = document.querySelector("[data-general-detail-form]");
+const customNotesInput = document.querySelector("[data-wine-custom-note]");
+const customNotesForm = document.querySelector("[data-custom-note-form]");
 const tastingNotesEl = document.querySelector("[data-wine-tasting-notes]");
 const tastingNoteForm = document.querySelector("[data-tasting-note-form]");
 const tastingNoteInput = document.querySelector("[data-tasting-note-input]");
@@ -142,6 +145,10 @@ function renderTastingNotes(notes) {
     });
 }
 
+function renderCustomNotes(notes) {
+    customNotesInput.value = notes;
+    currentCustomNotes = Array.isArray(notes) ? notes : [];
+}
 function setTastingNoteControlsDisabled(disabled) {
     tastingNoteInput.disabled = disabled;
     tastingNoteForm.querySelector("button").disabled = disabled;
@@ -194,6 +201,22 @@ async function deleteTastingNote(note) {
     return response.json();
 }
 
+async function saveCustomNotes(note) {
+        const response = await fetch(`/wine/${encodeURIComponent(wineId)}/custom-note`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({note})
+    });
+
+    if (!response.ok) {
+        throw new Error("Failed to add pairing");
+    }
+
+    return response.json();
+}
+
 async function savePairing(pairing) {
     const response = await fetch(`/wine/${encodeURIComponent(wineId)}/pairings`, {
         method: "POST",
@@ -226,6 +249,57 @@ async function deletePairing(pairing) {
     return response.json();
 }
 
+generalDataForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const name = nameEl.value.trim();
+    const region = regionEl.value.trim();
+    const grapes = grapesEl.value.trim().split("/");
+    const year = yearEl.value.trim();
+    const quantity = quantityEl.value.trim();
+    const drinkStart = drinkstartEl.value.trim();
+    const drinkEnd = drinkendEl.value.trim();
+    
+    let body = JSON.stringify({
+                name,
+                region,
+                grapes,
+                year,
+                quantity,
+                drink_window_start: drinkStart,
+                drink_window_end: drinkEnd
+            })
+    console.log(body);
+    try {
+        const response = await fetch(`/wine/${encodeURIComponent(wineId)}/general-data`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name,
+                region,
+                grapes:grapes.map(g => g.trim()).filter(Boolean),
+                year,
+                quantity,
+                drink_window_start: drinkStart,
+                drink_window_end: drinkEnd
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to update general data");
+        }
+
+        const data = await response.json();
+        console.log(data);
+        renderWine(data.wine);
+    }
+    catch (error) {
+        console.error(error);
+        alert("Failed to update general data. Please try again.");
+    }
+});
+
 tastingNoteForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -253,6 +327,25 @@ tastingNoteForm.addEventListener("submit", async (event) => {
         tastingNoteInput.focus();
     }
 });
+
+
+customNotesForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const notes = customNotesInput.value.trim();
+    console.log("Custom notes input value:", notes);
+
+    try {
+        const data = await saveCustomNotes(notes);
+    }
+    catch (error) {
+        console.error(error);
+    }
+
+});
+
+
+
 
 pairingForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -376,22 +469,24 @@ function renderError(title, detail) {
 }
 
 function renderWine(wine) {
+    console.log("Rendering wine:", wine);
     const grapes = formatList(wine.grapes, "Grape unknown");
     const region = wine.region || "Region unknown";
     const year = wine.year || "Year unknown";
-    const quantity = wine.quantity || "Quantity unknown";
+    const quantity = wine.quantity || "0";
     const drinkStart = wine.drink_window_start || "Unknown";
     const drinkEnd = wine.drink_window_end || "Unknown";
     document.title = `${wine.name} | CellarMaster`;
-    nameEl.textContent = wine.name || "Unnamed wine";
+    nameEl.value = wine.name || "Unnamed wine";
     summaryEl.textContent = `${grapes} from ${region}`;
-    regionEl.textContent = region;
-    grapesEl.textContent = grapes;
-    yearEl.textContent = year;
-    quantityEl.textContent = quantity;
-    drinkstartEl.textContent = drinkStart;
-    drinkendEl.textContent = drinkEnd;
+    regionEl.value = region;
+    grapesEl.value = grapes;
+    yearEl.value = year;
+    quantityEl.value = quantity;
+    drinkstartEl.value = drinkStart;
+    drinkendEl.value = drinkEnd;
     renderImage(wine);
+    renderCustomNotes(wine.custom_notes);
     renderPairings(wine.pairings);
     renderTastingNotes(formatTastingNotes(wine.tasting_notes));
 }
@@ -410,6 +505,7 @@ async function loadWine() {
         }
 
         const data = await response.json();
+        console.log(data);
         renderWine(data.wine);
     }
     catch (error) {

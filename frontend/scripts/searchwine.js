@@ -2,7 +2,7 @@ const API_URL = "/wines";
 
 const wineList = document.querySelector(".wine-list");
 const searchBox = document.querySelector(".search-box");
-const searchButton = document.querySelector(".search-btn");
+const inCellarOnly = document.querySelector(".in-cellar-only");
 const homeButton = document.querySelector(".nav-btn");
 const logo = document.getElementById("home");
 home.addEventListener("click", () => {
@@ -69,6 +69,9 @@ function renderWines(wineArray) {
     }
 
     wineArray.forEach((wine) => {
+        if (inCellarOnly.checked && (!wine.quantity || wine.quantity <= 0)) {
+            return;
+        }
         const grapes = Array.isArray(wine.grapes) && wine.grapes.length > 0
             ? wine.grapes.map(capitalize).join(" / ")
             : "Grape unknown";
@@ -143,8 +146,7 @@ async function removeWine(wineId) {
         alert("Failed to remove wine");
     }
 }
-
-searchButton.addEventListener("click", searchWines);
 searchBox.addEventListener("input", searchWines);
+inCellarOnly.addEventListener("change", searchWines);
 
 fetchWines();

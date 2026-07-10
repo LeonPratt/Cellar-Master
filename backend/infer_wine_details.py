@@ -68,8 +68,25 @@ def infer_basic(img, testing=False, local=False):
         messages = [
         {
             'role': 'user',
-            'content': 'look at this image of a wine bottle. Extract the name of the wine, the year it was produced, the grape variety, and the region it was produced in. If you cannot find any of this information, say "unknown". Return the information in a JSON format with the following structure: {"name": "name of the wine", "year": "year it was produced", "grape_variety": "grape variety", "region": "region it was produced in"}. If the year is unknown return 0 for the year.',
-            'images': [img]
+            'content': """
+                    Look at the wine bottle image.
+
+                    Extract the following fields exactly as they appear on the label:
+
+                    - producer: The winery or brand name.
+                    - wine_name: The specific wine/cuvée name, excluding producer.
+                    - vintage: The year.
+                    - grape_variety: The grape(s).
+                    - region: The wine region.
+
+                    Important:
+                    - Do not combine producer and wine name.
+                    - Do not infer missing information.
+                    - Do not rewrite names.
+                    - Preserve the exact spelling and punctuation from the label.
+                    - If a field is not visible, return "unknown".
+                    - Return only JSON.""",
+                    'images': [img]
         },
         ]
         for part in client.chat('gemma4:31b-cloud', messages=messages, stream=True):

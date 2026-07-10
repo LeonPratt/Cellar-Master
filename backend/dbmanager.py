@@ -1,9 +1,6 @@
 import sqlite3
 import os
-import re
-from difflib import SequenceMatcher
 from pathlib import Path
-
 import dotenv
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -63,85 +60,6 @@ def wine_exists(conn, name, year):
     row = cur.fetchone()
     return row[0] if row else None
 
-def _normalize_wine_name(name):
-    normalized = str(name or "").lower().replace("&", " and ")
-    normalized = re.sub(r"[^a-z0-9]+", " ", normalized)
-    return re.sub(r"\s+", " ", normalized).strip()
-
-def _token_set_ratio(left, right):
-    left_tokens = set(left.split())
-    right_tokens = set(right.split())
-
-    if not left_tokens or not right_tokens:
-        return 0
-
-    shared = left_tokens & right_tokens
-    left_remainder = left_tokens - shared
-    right_remainder = right_tokens - shared
-
-    shared_text = " ".join(sorted(shared))
-    left_text = " ".join(sorted(shared | left_remainder))
-    right_text = " ".join(sorted(shared | right_remainder))
-
-    return max(
-        SequenceMatcher(None, shared_text, left_text).ratio(),
-        SequenceMatcher(None, shared_text, right_text).ratio(),
-        SequenceMatcher(None, left_text, right_text).ratio(),
-    )
-
-def fuzzy_wine_exists(conn, wine_details):
-    """
-    Return the matching wineid for wine_details, or None if no match exists.
-
-    Vintage is a hard requirement: wines with different years are always
-    treated as different wines, even when their names match fuzzily.
-    """
-
-    name = wine_details.get("name") if isinstance(wine_details, dict) else None
-    year = wine_details.get("year") if isinstance(wine_details, dict) else None
-
-    try:
-        year = int(year)
-    except (TypeError, ValueError):
-        return None
-
-    normalized_name = _normalize_wine_name(name)
-    if not normalized_name:
-        return None
-
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT wineid, name FROM wines WHERE year = ?",
-        (year,)
-    )
-
-    best_match = None
-    best_score = 0
-
-    for wineid, db_name in cur.fetchall():
-        normalized_db_name = _normalize_wine_name(db_name)
-        if not normalized_db_name:
-            continue
-
-        names_match = (
-            normalized_name == normalized_db_name
-            or re.search(rf"\b{re.escape(normalized_name)}\b", normalized_db_name)
-            or re.search(rf"\b{re.escape(normalized_db_name)}\b", normalized_name)
-        )
-
-        if names_match:
-            return wineid
-
-        similarity = max(
-            _token_set_ratio(normalized_name, normalized_db_name),
-            SequenceMatcher(None, normalized_name, normalized_db_name).ratio(),
-        )
-
-        if similarity > best_score:
-            best_match = wineid
-            best_score = similarity
-
-    return best_match if best_score >= 0.88 else None
 
 def remove_wine_from_cellar(conn, wineid:int, quantity:int = -1):
     cur = conn.cursor()
@@ -343,6 +261,49 @@ def get_all_wineids_from_pairing(conn, pairing):
     wineids = cur.fetchall()
     return [x[0] for x in wineids]
 
+def update_general_data(conn, wineid: int, name: str, region: str, grapes: list, year: int, quantity: int, drink_start: int, drink_end: int):
+    if not wine_id_exists(conn, wineid):
+        return None
+
+    cur = conn.cursor()
+
+    # Update the wines table
+    cur.execute("""
+        UPDATE wines
+        SET name = ?, region = ?, year = ?
+        WHERE wineid = ?;
+    """, (name, region, year, wineid))
+
+    # Update the cellar table
+    cur.execute("""
+        UPDATE CELLAR
+        SET quantity = ?
+        WHERE wineid = ?;
+    """, (quantity, wineid))
+
+    # Update the drinking_windows table
+    cur.execute("""
+        UPDATE drinking_windows
+        SET start_year = ?, end_year = ?
+        WHERE wineid = ?;
+    """, (drink_start, drink_end, wineid))
+    # Update the grapes associated with the wine
+    
+    cur.execute("DELETE FROM wine_grapes WHERE wineid = ?", (wineid,))
+    
+    for grape in grapes:
+        with open("debug_log.txt", "a") as f:
+            f.write(f"Adding grape '{grape}' to wineid {wineid}\n")
+        grape_id = get_or_create_grape(conn, grape)
+        cur.execute("""
+            INSERT OR IGNORE INTO wine_grapes (wineid, grapeid)
+            VALUES (?, ?);
+        """, (wineid, grape_id))
+    
+    conn.commit()
+
+    return True
+
 
 def search_wines_by_pairing(conn, pairing, limit=20):
     """
@@ -400,7 +361,7 @@ def search_wines_by_pairing(conn, pairing, limit=20):
     return wines
 
 
-def search_wines(conn, search_term="", limit=10):
+def search_wines(conn, search_term="", limit=10,in_cellar_only=1):
     """
     Search wines by name, region, or grape name.
 
@@ -426,12 +387,12 @@ def search_wines(conn, search_term="", limit=10):
             w.name,
             w.year,
             w.region,
+            c.quantity,
             GROUP_CONCAT(DISTINCT g.name) AS grapes
         FROM WINES w
         INNER JOIN CELLAR c ON w.wineid = c.wineid
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
         LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
-        WHERE c.quantity > 0
         GROUP BY w.wineid
         ORDER BY w.wineid
         LIMIT ?
@@ -448,6 +409,7 @@ def search_wines(conn, search_term="", limit=10):
             w.name,
             w.year,
             w.region,
+            c.quantity,
             GROUP_CONCAT(DISTINCT g.name) AS grapes
         FROM WINES w
         INNER JOIN CELLAR c ON w.wineid = c.wineid
@@ -465,7 +427,7 @@ def search_wines(conn, search_term="", limit=10):
         LIMIT ?
         """
 
-        cursor.execute(query, (search, search, search, limit))
+        cursor.execute(query, ( search, search, search, limit))
 
     rows = cursor.fetchall()
 
@@ -477,7 +439,8 @@ def search_wines(conn, search_term="", limit=10):
             "name": row[1],
             "year": row[2],
             "region": row[3],
-            "grapes": row[4].split(",") if row[4] else []
+            "quantity": row[4] or 0,
+            "grapes": row[5].split(",") if row[5] else []
         })
 
     return wines
@@ -499,7 +462,8 @@ def get_wine_by_id(conn, wineid: int):
             GROUP_CONCAT(DISTINCT fp.name) AS pairings,
             w.image_path,
             dw.start_year,
-            dw.end_year
+            dw.end_year,
+            w.Custom_notes
         FROM WINES w
         LEFT JOIN CELLAR c ON w.wineid = c.wineid
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
@@ -529,7 +493,8 @@ def get_wine_by_id(conn, wineid: int):
         "pairings": row[7].split(",") if row[7] else [],
         "imgpath": f"{row[8]}.png" if row[8] else "assets/images/bottle_placeholder.png",
         "drink_window_start": row[9] if row[9] else "Unknown",
-        "drink_window_end": row[10] if row[10] else "Unknown"
+        "drink_window_end": row[10] if row[10] else "Unknown",
+        "custom_notes": row[11] if row[11] else ""
     }
 
 
@@ -568,6 +533,20 @@ def update_tasting_notes(conn, wineid: int, notes):
     conn.commit()
     return cleaned_notes
 
+
+def update_custom_notes(conn, wineid: int, notes):
+    cursor = conn.cursor()
+    cursor.execute("SELECT wineid FROM wines WHERE wineid = ?", (wineid,))
+
+    if not cursor.fetchone():
+        return None
+
+    cursor.execute(
+        "UPDATE wines SET Custom_notes = ? WHERE wineid = ?",
+        (notes, wineid)
+    )
+    conn.commit()
+    return notes
 
 def add_tasting_note(conn, wineid: int, note: str):
     existing_notes = get_tasting_notes(conn, wineid)

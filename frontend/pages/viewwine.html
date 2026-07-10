@@ -24,39 +24,62 @@
         <article class="wine-detail-content">
           <div class="wine-detail-header">
             <p class="eyebrow">Cellar bottle</p>
-            <h2 class="wine-detail-title" data-wine-name>Loading wine...</h2>
+            <input type="text" class="wine-detail-title" data-wine-name>
+
             <div class="wine-detail-subtitle" data-wine-summary></div>
           </div>
 
-          <div class="detail-grid">
+          <form class="detail-grid" data-general-detail-form>
             <div class="detail-stat">
               <span class="detail-label">Region</span>
-              <span class="detail-value" data-wine-region></span>
+              <input type="text" class="detail-value" data-wine-region placeholder = "unknown" name="region" />
             </div>
 
             <div class="detail-stat">
               <span class="detail-label">Grape(s)</span>
-              <span class="detail-value" data-wine-grapes></span>
+              <input type="text" class="detail-value" data-wine-grapes placeholder = "unknown" name="grapes" />
             </div>
 
             <div class="detail-stat">
               <span class="detail-label">Year</span>
-              <span class="detail-value" data-wine-year></span>
+              <input type="text" class="detail-value" data-wine-year placeholder = "unknown" name="year" />
             </div>
             <div class="detail-stat">
               <span class="detail-label">Quantity</span>
-              <span class="detail-value" data-wine-quantity></span>
+              <input type="text" class="detail-value" data-wine-quantity placeholder = "unknown" name="quantity" />
             </div>
             <div class="detail-stat">
               <span class="detail-label">Drink from</span>
-              <span class="detail-value" data-wine-drink-start></span>
+              <input type="text" class="detail-value" data-wine-drink-start="" placeholder = "unknown" name="drink-start" />
+
             </div>
             <div class="detail-stat">
               <span class="detail-label">Drink by</span>
-              <span class="detail-value" data-wine-drink-end></span>
-            </div>
+              <input type="text" class="detail-value" data-wine-drink-end placeholder = "unknown" name="drink-end" />
 
-          </div>
+            </div>
+            <div></div>
+            <div></div>
+            <button class="general-update" type="submit" data-general-update-button>Update</button>
+          </form>
+
+          <section class="detail-section custom-note-section">
+            <h2>Custom Note</h2>
+            <form class="custom-note-form" data-custom-note-form>
+              <textarea
+                id="custom-note"
+                class="custom-note-input"
+                data-wine-custom-note
+                name="custom-note"
+                placeholder="Add your own note"
+                aria-label="Custom note"
+                rows="1"
+                oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+              ></textarea>
+              <button class="custom-note-update" type="submit">Update Notes</button>
+            </form>
+            <p class="note-status" data-custom-note-status aria-live="polite"></p>
+          </section>
 
           <section class="detail-section">
             <h2>Tasting Notes</h2>
