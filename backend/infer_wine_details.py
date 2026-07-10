@@ -173,7 +173,11 @@ def gen_extra_details(wine_details):
           function_to_call = available_tools.get(tool_call.function.name)
           if function_to_call:
             args = tool_call.function.arguments
-            result = function_to_call(**args)
+            result = None
+            try:
+                result = function_to_call(**args)
+            except Exception as e:
+                result = f"Tool failed: {str(e)}"
             print('Result: ', str(result)[:200]+'...')
             messages.append({'role': 'tool', 'content': str(result)[:2000 * 4], 'tool_name': tool_call.function.name})
           else:
@@ -200,10 +204,10 @@ def parseResponse(response):
         year_value = 0
 
     return {
-        "name": parsed.get("name", "unknown"),
+        "name": parsed.get("name", "").replace("unknown", "").strip(),
         "year": year_value,
-        "grape_variety": parsed.get("grape_variety", "unknown"),
-        "region": parsed.get("region", "unknown"),
+        "grape_variety": parsed.get("grape_variety", "").replace("unknown", "").strip(),
+        "region": parsed.get("region", "").replace("unknown", "").strip(),
     }
 
 def Add_to_cellar(data):
@@ -232,7 +236,7 @@ def Add_to_cellar(data):
 def Remove_from_cellar(data):
     conn = dbmanager.connect()
 
-    wineid = dbmanager.fuzzy_wine_exists(conn, data)
+    wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
 
     if wineid == None:
        print("wine does not exist")

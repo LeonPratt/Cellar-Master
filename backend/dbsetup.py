@@ -1,12 +1,13 @@
 import sqlite3
 import os
 import dotenv
-dotenv.load_dotenv(r"C:\Users\leona\OneDrive\Documents\GitHub\vinum\.env")
+dotenv.load_dotenv(r"C:\Users\Leon\OneDrive\Documents\GitHub\vinum\.env")
 
 DB_DIR = os.environ.get("DB_DIR")
 print(DB_DIR)
 
 def create_connection(db_name=DB_DIR):
+    print(f"Connecting to database: {db_name}")
     conn = sqlite3.connect(db_name)
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn

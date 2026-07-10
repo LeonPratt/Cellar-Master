@@ -7,6 +7,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from werkzeug.utils import secure_filename
 import dbmanager
 import infer_wine_details
+import threading
 
 BACKEND_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BACKEND_DIR.parent
@@ -234,12 +235,13 @@ def serve_upload(filename):
 def add():
     data = request.get_json()
     print(data)
-    with open("debug_log.txt", "a") as f:
-        f.write(f"Received data: {data}\n")
     try:
-        infer_wine_details.Add_to_cellar(data)
+        thread = threading.Thread(target=infer_wine_details.Add_to_cellar, args=(data,))
+        #infer_wine_details.Add_to_cellar(data)
+        thread.start()
         return jsonify({"status": "added"})
     except Exception:
+
         return jsonify({"status": "failed"}), 500
         
 

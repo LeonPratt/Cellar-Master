@@ -32,14 +32,19 @@ document.getElementById("add").addEventListener("click", async (e) => {
 
   console.log("data: " + JSON.stringify(data));
 
-  const res = fetch("/add-to-cellar", {
+  const res = await fetch("/add-to-cellar", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(data)
   });
-  window.location.href = ("/")
 
-  console.log(await res.json());
+  const result = await res.json();
+  console.log(result);
+  if (!res.ok) {
+    return;
+  }
+
+  window.location.href = ("/")
   });
 
 document.getElementById("remove").addEventListener("click", async (e) => {
