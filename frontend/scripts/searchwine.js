@@ -5,14 +5,29 @@ const searchBox = document.querySelector(".search-box");
 const inCellarOnly = document.querySelector(".in-cellar-only");
 const homeButton = document.querySelector(".nav-btn");
 const logo = document.getElementById("home");
-home.addEventListener("click", () => {
-    window.location.href = "/";
+const currentCellarBox = document.querySelector(".current-cellar");
+
+logo.addEventListener("click", () => {
+    window.location.href = "/home";
 });
 let wines = [];
 
 homeButton.addEventListener("click", () => {
-    window.location.href = "/";
+    window.location.href = "/home";
 });
+
+function loadCurrentCellar(){
+    let cellar = localStorage.getItem("cellarmaster-selected-cellar") || "";
+
+    currentCellarBox.textContent = cellar;
+    return cellar
+}
+loadCurrentCellar()
+
+currentCellarBox.addEventListener("click",function(){
+    window.location.href="/"
+})
+
 
 function escapeHtml(value) {
     return String(value ?? "")
@@ -43,8 +58,14 @@ function renderMessage(title, detail = "") {
 }
 
 async function fetchWines(searchterm = "", inCellarOnlyFlag = false) {
+    const cellar = loadCurrentCellar();
+    if (!cellar) {
+        window.location.href = "/";
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_URL}?q=${encodeURIComponent(searchterm)}&in_cellar_only=${inCellarOnlyFlag ? 1 : 0}`,
+        const response = await fetch(`${API_URL}?q=${encodeURIComponent(searchterm)}&in_cellar_only=${inCellarOnlyFlag ? 1 : 0}&c=${encodeURIComponent(cellar)}`,
         {method: "GET"
         });
 
@@ -100,7 +121,7 @@ function renderWines(wineArray) {
         `;
 
         wineCard.querySelector(".view-btn").addEventListener("click", () => {
-            window.location.href = `/view?wineid=${encodeURIComponent(wine.wineid)}`;
+            window.location.href = `/view?wineid=${encodeURIComponent(wine.wineid)}&c=${encodeURIComponent(loadCurrentCellar())}`;
         });
         if (wine.quantity == 0) {
             wineCard.style.backgroundColor = "#c0c0c0";
@@ -122,10 +143,16 @@ async function searchWines() {
 }
 
 async function removeWine(wine) {
+    const cellar = loadCurrentCellar();
+    if (!cellar) {
+        window.location.href = "/";
+        return;
+    }
+
     try {
         console.log(`Removing wine with ID: ${wine.wineid}`);
         const response = await fetch(
-            `${API_URL}/${encodeURIComponent(parseInt(wine.wineid))}`,
+            `${API_URL}/${encodeURIComponent(parseInt(wine.wineid))}?c=${encodeURIComponent(cellar)}`,
             { method: "DELETE" }
         );
         console.log(response);

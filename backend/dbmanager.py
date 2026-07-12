@@ -25,6 +25,93 @@ def connect(db=DB_DIR):
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
+def _quote_identifier(identifier: str) -> str:
+    """Quote a SQLite identifier after it has been resolved from the cellars table."""
+    return '"' + identifier.replace('"', '""') + '"'
+
+
+def get_cellar(conn, cellarname: str):
+    """Return the canonical stored cellar name, or None when it does not exist."""
+    if not isinstance(cellarname, str) or not cellarname.strip():
+        return None
+
+    row = conn.execute(
+        "SELECT name FROM cellars WHERE name = ? COLLATE NOCASE",
+        (cellarname.strip(),),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def _cellar_table(conn, cellarname: str):
+    canonical_name = get_cellar(conn, cellarname)
+    if canonical_name is None:
+        return None
+    return _quote_identifier(canonical_name)
+
+
+def Create_Cellar(conn, name):
+    name = str(name or "").strip()
+    if not name or "\x00" in name:
+        return None
+
+    try:
+        cur = conn.cursor()
+        if get_cellar(conn, name) is not None:
+            return None
+
+        cur.execute("INSERT INTO cellars (name) VALUES(?)", (name,))
+        cellarid = cur.lastrowid
+        cur.execute(f"""
+        CREATE TABLE {_quote_identifier(name)} (
+            wineid INTEGER PRIMARY KEY,
+            quantity INTEGER NOT NULL,
+            FOREIGN KEY (wineid) REFERENCES wines(wineid)
+                ON DELETE CASCADE
+        );
+        """)
+        conn.commit()
+        return {"cellarid": cellarid, "name": name}
+    except sqlite3.Error:
+        conn.rollback()
+        return None
+
+def Delete_cellar(conn, cellarid):
+    try:
+        cur = conn.cursor()
+        row = cur.execute(
+            "SELECT name FROM cellars WHERE cellarid = ?", (int(cellarid),)
+        ).fetchone()
+        if row is None:
+            return False
+
+        cur.execute(f"DROP TABLE {_quote_identifier(row[0])}")
+        cur.execute("DELETE FROM cellars WHERE cellarid = ?", (int(cellarid),))
+
+        conn.commit()
+        return True
+    except (TypeError, ValueError, sqlite3.Error):
+        conn.rollback()
+        return False
+def get_all_cellars(conn):
+    cur = conn.cursor()
+
+    cellars = []
+    rows = cur.execute("SELECT cellarid, name FROM cellars ORDER BY name COLLATE NOCASE").fetchall()
+    for cellarid, name in rows:
+        
+        num_bottles = cur.execute(f"""
+        SELECT SUM(quantity) FROM {name};
+        """).fetchone()[0]
+        print(cellarid,name,num_bottles)
+        cellars.append({"cellarid":cellarid,"name":name,"num_bottles":num_bottles})
+    return cellars
+#    return [
+#        {"cellarid": row[0], "name": row[1]}
+#        for row in cur.execute("SELECT cellarid, name FROM cellars ORDER BY name COLLATE NOCASE")
+#    ]
+
+
+
 def get_or_create_grape(conn, name):
     cur = conn.cursor()
 
@@ -61,26 +148,34 @@ def wine_exists(conn, name, year):
     return row[0] if row else None
 
 
-def remove_wine_from_cellar(conn, wineid:int, quantity:int = -1):
+def remove_wine_from_cellar(conn, wineid: int, cellarname: str, quantity: int = -1):
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return False
+
     cur = conn.cursor()
     if quantity == -1:
         cur.execute(
-            "UPDATE CELLAR SET quantity = 0 WHERE wineid = ?;",
+            f"UPDATE {cellar_table} SET quantity = 0 WHERE wineid = ?;",
             (wineid,))
     else:
         cur.execute(
-            "UPDATE CELLAR SET quantity = quantity - ? WHERE wineid = ?;",
+            f"UPDATE {cellar_table} SET quantity = MAX(quantity - ?, 0) WHERE wineid = ?;",
             (quantity, wineid))
 
     conn.commit()
 
-    return True
+    return cur.rowcount > 0
 
-def get_qty_in_cellar(conn,wineid:int):
+def get_qty_in_cellar(conn, wineid: int, cellarname: str):
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return 0
+
     cur = conn.cursor()
     cur.execute(
-        """
-        SELECT quantity FROM CELLAR WHERE wineid = ?;
+        f"""
+        SELECT quantity FROM {cellar_table} WHERE wineid = ?;
         """,(wineid,)
     )
     qty = cur.fetchone()
@@ -89,27 +184,30 @@ def get_qty_in_cellar(conn,wineid:int):
     else:
         return 0
 
-def insert_preexisting_wine(conn,wineid:int, qty:int):
+def insert_preexisting_wine(conn, wineid: int, cellarname: str, qty: int):
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return False
 
-    cur_qty = get_qty_in_cellar(conn, wineid)
+    cur_qty = get_qty_in_cellar(conn, wineid, cellarname)
     cur = conn.cursor()
     if cur_qty == 0:
         cur.execute(
-            """
-            INSERT INTO CELLAR (wineid, quantity) VALUES (?,?)
+            f"""
+            INSERT INTO {cellar_table} (wineid, quantity) VALUES (?,?)
             """,(wineid, qty)
         )
         conn.commit()
     else:
         cur.execute(
-            """
-            UPDATE CELLAR SET quantity = quantity + ? WHERE wineid = ?;
+            f"""
+            UPDATE {cellar_table} SET quantity = quantity + ? WHERE wineid = ?;
         """,(qty, wineid)
         )
         conn.commit()
     return True
 
-def insert_new_wine(conn, data: dict):
+def insert_new_wine(conn, data: dict, cellarname: str):
     """
     Expected dict format:
     {
@@ -127,6 +225,10 @@ def insert_new_wine(conn, data: dict):
     }
     """
 
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return None
+
     cur = conn.cursor()
 
     cur.execute("""
@@ -142,8 +244,8 @@ def insert_new_wine(conn, data: dict):
 
     wineid = cur.lastrowid
 
-    cur.execute("""
-        INSERT INTO CELLAR (wineid, quantity)
+    cur.execute(f"""
+        INSERT INTO {cellar_table} (wineid, quantity)
         VALUES (?, ?)
     """, (wineid,data["quantity"]))
 
@@ -209,6 +311,15 @@ def wine_id_exists(conn, wineid: int):
     return cur.fetchone() is not None
 
 
+def wine_exists_in_cellar(conn, wineid: int, cellarname: str):
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return False
+    return conn.execute(
+        f"SELECT 1 FROM {cellar_table} WHERE wineid = ?", (wineid,)
+    ).fetchone() is not None
+
+
 def add_pairing_to_wine(conn, wineid: int, pairing: str):
     if not wine_id_exists(conn, wineid):
         return None
@@ -245,23 +356,31 @@ def remove_pairing_from_wine(conn, wineid: int, pairing: str):
 
     return get_all_pairings_from_wineid(conn, wineid)
 
-def get_all_wineids_from_pairing(conn, pairing):
+def get_all_wineids_from_pairing(conn, pairing, cellarname):
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return []
+
     cur = conn.cursor()
     cur.execute("SELECT pairingid FROM food_pairings WHERE name = ?;", (pairing,))
     pairingid = cur.fetchone()
     if pairingid == None:
         return []
-    cur.execute("""
+    cur.execute(f"""
         SELECT wp.wineid
-            "grape_variety": ["Viognier"],
-        INNER JOIN CELLAR c ON wp.wineid = c.wineid
+        FROM wine_pairings wp
+        INNER JOIN {cellar_table} c ON wp.wineid = c.wineid
         WHERE wp.pairingid = ? AND c.quantity > 0;
     """, (pairingid[0],))
     wineids = cur.fetchall()
     return [x[0] for x in wineids]
 
-def update_general_data(conn, wineid: int, name: str, region: str, grapes: list, year: int, quantity: int, drink_start: int, drink_end: int):
+def update_general_data(conn, wineid: int, name: str, region: str, grapes: list, year: int, quantity: int, drink_start: int, drink_end: int, cellarname: str):
     if not wine_id_exists(conn, wineid):
+        return None
+
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
         return None
 
     cur = conn.cursor()
@@ -274,11 +393,11 @@ def update_general_data(conn, wineid: int, name: str, region: str, grapes: list,
     """, (name, region, year, wineid))
 
     # Update the cellar table
-    cur.execute("""
-        UPDATE CELLAR
-        SET quantity = ?
-        WHERE wineid = ?;
-    """, (quantity, wineid))
+    cur.execute(f"""
+        INSERT INTO {cellar_table} (wineid, quantity)
+        VALUES (?, ?)
+        ON CONFLICT(wineid) DO UPDATE SET quantity = excluded.quantity;
+    """, (wineid, quantity))
 
     # Update the drinking_windows table
     cur.execute("""
@@ -293,8 +412,6 @@ def update_general_data(conn, wineid: int, name: str, region: str, grapes: list,
     cur.execute("DELETE FROM wine_grapes WHERE wineid = ?", (wineid,))
     
     for grape in grapes:
-        with open("debug_log.txt", "a") as f:
-            f.write(f"Adding grape '{grape.title().strip()}' to wineid {wineid}\n")
         grape_id = get_or_create_grape(conn, grape.title().strip())
         cur.execute("""
             INSERT OR IGNORE INTO wine_grapes (wineid, grapeid)
@@ -306,13 +423,17 @@ def update_general_data(conn, wineid: int, name: str, region: str, grapes: list,
     return True
 
 
-def search_wines_by_pairing(conn, pairing, limit=20):
+def search_wines_by_pairing(conn, pairing, cellarname, limit=20):
     """
     Search cellar wines by food pairing name.
 
     Returns wines that have at least one bottle in the cellar and whose
     saved food pairing contains the provided search term.
     """
+
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return []
 
     search_term = pairing.strip()
     if search_term == "":
@@ -321,7 +442,7 @@ def search_wines_by_pairing(conn, pairing, limit=20):
     cursor = conn.cursor()
     search = f"%{search_term}%"
 
-    query = """
+    query = f"""
     SELECT
         w.wineid,
         w.name,
@@ -331,7 +452,7 @@ def search_wines_by_pairing(conn, pairing, limit=20):
         GROUP_CONCAT(DISTINCT g.name) AS grapes,
         GROUP_CONCAT(DISTINCT fp.name) AS matched_pairings
     FROM WINES w
-    INNER JOIN CELLAR c ON w.wineid = c.wineid
+    INNER JOIN {cellar_table} c ON w.wineid = c.wineid
     INNER JOIN WINE_PAIRINGS wp ON w.wineid = wp.wineid
     INNER JOIN FOOD_PAIRINGS fp ON wp.pairingid = fp.pairingid
     LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
@@ -341,9 +462,10 @@ def search_wines_by_pairing(conn, pairing, limit=20):
         AND fp.name LIKE ?
     GROUP BY w.wineid
     ORDER BY w.name
+    LIMIT ?
     """
 
-    cursor.execute(query, (search,))
+    cursor.execute(query, (search, limit))
     rows = cursor.fetchall()
 
     wines = []
@@ -361,7 +483,7 @@ def search_wines_by_pairing(conn, pairing, limit=20):
     return wines
 
 
-def search_wines(conn, search_term="", limit=10,in_cellar_only=1):
+def search_wines(conn, cellarname, search_term="", limit=10, in_cellar_only=True):
     """
     Search wines by name, region, or grape name.
 
@@ -378,45 +500,53 @@ def search_wines(conn, search_term="", limit=10,in_cellar_only=1):
         ]
     """
 
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return []
+
     cursor = conn.cursor()
+    cellar_join = f"INNER JOIN {cellar_table} c ON w.wineid = c.wineid" if in_cellar_only else f"LEFT JOIN {cellar_table} c ON w.wineid = c.wineid"
+    cellar_filter = "WHERE c.quantity > 0" if in_cellar_only else ""
 
     if search_term.strip() == "":
-        query = """
+        query = f"""
         SELECT
             w.wineid,
             w.name,
             w.year,
             w.region,
-            c.quantity,
+            COALESCE(c.quantity, 0) AS quantity,
             GROUP_CONCAT(DISTINCT g.name) AS grapes
         FROM WINES w
-        INNER JOIN CELLAR c ON w.wineid = c.wineid
+        {cellar_join}
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
         LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
+        {cellar_filter}
         GROUP BY w.wineid
         ORDER BY w.wineid
+        LIMIT ?
         """
 
-        cursor.execute(query, ())
+        cursor.execute(query, (limit,))
 
     else:
         search = f"%{search_term}%"
 
-        query = """
+        query = f"""
         SELECT
             w.wineid,
             w.name,
             w.year,
             w.region,
-            c.quantity,
+            COALESCE(c.quantity, 0) AS quantity,
             GROUP_CONCAT(DISTINCT g.name) AS grapes
         FROM WINES w
-        INNER JOIN CELLAR c ON w.wineid = c.wineid
+        {cellar_join}
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
         LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
         WHERE
-            c.quantity > 0
-            AND (
+            {"c.quantity > 0 AND" if in_cellar_only else ""}
+            (
                 w.name LIKE ?
                 OR w.region LIKE ?
                 OR EXISTS (
@@ -430,9 +560,10 @@ def search_wines(conn, search_term="", limit=10,in_cellar_only=1):
             )
         GROUP BY w.wineid
         ORDER BY w.wineid
+        LIMIT ?
         """
 
-        cursor.execute(query, ( search, search, search, search ))
+        cursor.execute(query, (search, search, search, search, limit))
 
     rows = cursor.fetchall()
 
@@ -451,11 +582,15 @@ def search_wines(conn, search_term="", limit=10,in_cellar_only=1):
     return wines
 
 
-def get_wine_by_id(conn, wineid: int):
+def get_wine_by_id(conn, wineid: int, cellarname: str):
+    cellar_table = _cellar_table(conn, cellarname)
+    if cellar_table is None:
+        return None
+
     cursor = conn.cursor()
 
     cursor.execute(
-        """
+        f"""
         SELECT
             w.wineid,
             w.name,
@@ -470,7 +605,7 @@ def get_wine_by_id(conn, wineid: int):
             dw.end_year,
             w.Custom_notes
         FROM WINES w
-        LEFT JOIN CELLAR c ON w.wineid = c.wineid
+        LEFT JOIN {cellar_table} c ON w.wineid = c.wineid
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
         LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
         LEFT JOIN WINE_PAIRINGS wp ON w.wineid = wp.wineid
@@ -597,7 +732,8 @@ if __name__ == "__main__":
         "quantity":3
     }
 
-    wine_id = insert_new_wine(conn, wine_data)
+    cellar = Create_Cellar(conn, "Example Cellar") or {"name": "Example Cellar"}
+    wine_id = insert_new_wine(conn, wine_data, cellar["name"])
     
     #remove_wine_from_cellar(conn,2)
     conn.close()

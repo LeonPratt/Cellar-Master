@@ -229,38 +229,36 @@ def parseResponse(response):
 
 def Add_to_cellar(data):
     conn = dbmanager.connect()
-    wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
+    try:
+        cellar = data["cellar"]
+        wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
 
-    if wineid == None:
-        
-        extra_details = gen_extra_details(data)
-        data["tasting_notes"] = extra_details["tasting_notes"]
-        data["food_pairings"] = extra_details["food_pairings"].split("|")
-        data["drink_window_start"] = extra_details["start_year"]
-        data["drink_window_end"] = extra_details["end_year"]
-        """
-        data["tasting_notes"] = "idk,yada,yada"
-        data["food_pairings"] = "Roasted chicken|turkey|lamb|steak".split("|")
-        data["drink_window_start"] = "2015"
-        data["drink_window_end"] = "2025"
-        """
-        dbmanager.insert_new_wine(conn, data)
-
-    else:
-        dbmanager.insert_preexisting_wine(conn, wineid, data["quantity"])
+        if wineid is None:
+            extra_details = gen_extra_details(data)
+            data["tasting_notes"] = extra_details["tasting_notes"]
+            data["food_pairings"] = extra_details["food_pairings"].split("|")
+            data["drink_window_start"] = extra_details["start_year"]
+            data["drink_window_end"] = extra_details["end_year"]
+            dbmanager.insert_new_wine(conn, data, cellar)
+        else:
+            dbmanager.insert_preexisting_wine(conn, wineid, cellar, data["quantity"])
+    finally:
+        conn.close()
         
 
 def Remove_from_cellar(data):
     conn = dbmanager.connect()
+    try:
+        wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
 
-    wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
+        if wineid is None:
+            return False
 
-    if wineid == None:
-       print("wine does not exist")
-       return False
-
-    else:
-       dbmanager.remove_wine_from_cellar(conn, wineid, data["quantity"])
+        return dbmanager.remove_wine_from_cellar(
+            conn, wineid, data["cellar"], data["quantity"]
+        )
+    finally:
+        conn.close()
 
     
 

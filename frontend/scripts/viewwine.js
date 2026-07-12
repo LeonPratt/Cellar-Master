@@ -23,6 +23,7 @@ const pairingStatus = document.querySelector("[data-pairing-status]");
 const imageEl = document.querySelector("[data-wine-image]");
 const backButton = document.querySelector("[data-back-button]");
 const homeButton = document.querySelector("[data-home-button]");
+const currentCellarBox = document.querySelector(".current-cellar");
 
 let currentTastingNotes = [];
 let currentPairings = [];
@@ -34,6 +35,19 @@ backButton.addEventListener("click", () => {
 homeButton.addEventListener("click", () => {
     window.location.href = "/";
 });
+
+currentCellarBox.addEventListener("click",function(){
+    window.location.href="/"
+})
+
+
+function loadCurrentCellar(){
+    let cellar = localStorage.getItem("cellarmaster-selected-cellar") || "";
+
+    currentCellarBox.textContent = cellar;
+    return cellar
+}
+loadCurrentCellar()
 
 function capitalize(text) {
     return String(text ?? "")
@@ -453,7 +467,7 @@ function renderImage(wine) {
         imageEl.alt = "";
         return;
     }
-
+    
     imageEl.src = src;
     imageEl.alt = `${wine.name || "Wine"} bottle`;
     imageEl.hidden = false;
@@ -504,7 +518,7 @@ async function loadWine() {
     }
 
     try {
-        const response = await fetch(`/wine/${encodeURIComponent(wineId)}`);
+        const response = await fetch(`/wine/${encodeURIComponent(wineId)}?c=${encodeURIComponent(loadCurrentCellar())}`);
 
         if (!response.ok) {
             throw new Error("Wine not found");

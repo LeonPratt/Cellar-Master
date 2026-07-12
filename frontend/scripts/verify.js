@@ -16,7 +16,11 @@ if(params.get("year") == "0"){
 else{
   document.querySelector('input[name="year"]').value = params.get("year") || "";
 }
-
+function loadCurrentCellar(){
+    let cellar = localStorage.getItem("cellarmaster-selected-cellar") || "";
+    return cellar
+}
+loadCurrentCellar()
 
 
 const form = document.getElementById("wine-form");
@@ -28,11 +32,16 @@ function getFormData() {
 document.getElementById("add").addEventListener("click", async (e) => {
   e.preventDefault();
   let data = getFormData();
+  const cellar = loadCurrentCellar();
+  if (!cellar) {
+    window.location.href = "/";
+    return;
+  }
   data.imgpath = params.get("img");
 
   console.log("data: " + JSON.stringify(data));
-
-  const res = await fetch("/add-to-cellar", {
+  data.cellar = cellar;
+  const res = await fetch(`/add-to-cellar?c=${encodeURIComponent(cellar)}`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(data)
@@ -44,19 +53,25 @@ document.getElementById("add").addEventListener("click", async (e) => {
     return;
   }
 
-  window.location.href = ("/")
+  window.location.href = ("/home")
   });
 
 document.getElementById("remove").addEventListener("click", async (e) => {
   e.preventDefault();
-
-  const res = await fetch("/remove-from-cellar", {
+  const data = getFormData();
+  const cellar = loadCurrentCellar();
+  if (!cellar) {
+    window.location.href = "/";
+    return;
+  }
+  data.cellar = cellar;
+  const res = await fetch(`/remove-from-cellar?c=${encodeURIComponent(cellar)}`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(getFormData())
+    body: JSON.stringify(data)
   });
 
   console.log(await res.json());
-  window.location.href = ("/")
+  window.location.href = ("/home")
 
 });

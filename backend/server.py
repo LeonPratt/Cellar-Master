@@ -24,14 +24,74 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 app = Flask(__name__)
 
 
+def selected_cellar(data=None):
+    """Read the active cellar consistently from the query string or JSON body."""
+    cellar = request.args.get("c")
+    with open("debug.txt","a") as f:
+        f.write("cellar")
+    if cellar is None and isinstance(data, dict):
+        cellar = data.get("cellar")
+    
+    return str(cellar or "").strip()
+
+
+def cellar_required_response():
+    return jsonify({"message": "Select a cellar before continuing."}), 400
+
+
 def send_page(filename):
     return send_from_directory(PAGES_DIR, filename)
 
-
 @app.route("/")
 def index():
-    return send_page("home.html")
+    return send_page("cellars.html")
 
+@app.get("/cellars")
+def get_cellars():
+    conn = dbmanager.connect()
+    try:
+        return jsonify({"cellars": dbmanager.get_all_cellars(conn)})
+    finally:
+        conn.close()
+
+@app.post("/cellars/new")
+def new_cellar():
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name", "")).strip()
+    if not name:
+        return jsonify({"message": "A cellar name is required."}), 400
+
+    conn = dbmanager.connect()
+    try:
+        cellar = dbmanager.Create_Cellar(conn, name)
+    finally:
+        conn.close()
+
+    if cellar is None:
+        return jsonify({"message": "Could not create that cellar. Names must be unique."}), 400
+    return jsonify({"cellar": cellar}), 201
+
+@app.post("/cellars/delete")
+def delete_cellar():
+    data = request.get_json(silent=True) or {}
+    try:
+        cellarid = int(data.get("id", ""))
+    except (TypeError, ValueError):
+        return jsonify({"message": "A valid cellar id is required."}), 400
+
+    conn = dbmanager.connect()
+    try:
+        deleted = dbmanager.Delete_cellar(conn, cellarid)
+    finally:
+        conn.close()
+
+    if not deleted:
+        return jsonify({"message": "Cellar not found."}), 404
+    return jsonify({"deleted": True})
+
+@app.route("/home")
+def home():
+    return send_page("home.html")
 
 @app.route("/apple-touch-icon.png")
 @app.route("/apple-touch-icon-precomposed.png")
@@ -81,18 +141,29 @@ def assets(filename):
 def getwines():
     searchterm = request.args.get("q", "")
     incellaronly = request.args.get("in_cellar_only", "0") == "1"
+    cellar = selected_cellar()
+    if not cellar:
+        return cellar_required_response()
 
     conn = dbmanager.connect()
-    res = dbmanager.search_wines(conn, searchterm, limit=20, in_cellar_only=incellaronly)
-    conn.close()
+    try:
+        res = dbmanager.search_wines(conn, cellar, searchterm, limit=20, in_cellar_only=incellaronly)
+    finally:
+        conn.close()
     return jsonify({"wines": res})
 
 
 @app.delete("/wines/<int:wineid>")
 def delete_wine(wineid):
+    cellar = selected_cellar()
+    if not cellar:
+        return cellar_required_response()
+
     conn = dbmanager.connect()
-    res = dbmanager.remove_wine_from_cellar(conn, int(wineid), -1)
-    conn.close()
+    try:
+        res = dbmanager.remove_wine_from_cellar(conn, wineid, cellar, -1)
+    finally:
+        conn.close()
 
 
     if res !=True:
@@ -103,9 +174,15 @@ def delete_wine(wineid):
 
 @app.route("/wine/<int:wineid>")
 def get_wine(wineid):
+    cellar = selected_cellar()
+    if not cellar:
+        return cellar_required_response()
+
     conn = dbmanager.connect()
-    res = dbmanager.get_wine_by_id(conn, wineid)
-    conn.close()
+    try:
+        res = dbmanager.get_wine_by_id(conn, wineid, cellar)
+    finally:
+        conn.close()
 
     if res is None:
         return jsonify({"message": "Wine not found"}), 404
@@ -115,6 +192,9 @@ def get_wine(wineid):
 @app.post("/wine/<int:wineid>/general-data")
 def update_general_data(wineid):
     data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
     name = str(data.get("name", "")).strip()
     region = str(data.get("region", "")).strip()
     grapes = data.get("grapes",[])
@@ -125,26 +205,32 @@ def update_general_data(wineid):
     with open("debug_log.txt", "a") as f:
         f.write(f"Received data for wineid {wineid}: name={name}, region={region}, grapes={grapes}, year={year}, quantity={quantity}, drink_start={drink_start}, drink_end={drink_end}\n")
     conn = dbmanager.connect()
-    updated_wine = dbmanager.update_general_data(conn, wineid, name, region, grapes, year, quantity, drink_start, drink_end)
-
-    if updated_wine is None:
-        return jsonify({"message": "Wine not found"}), 404
-
-
-    res = dbmanager.get_wine_by_id(conn, wineid)
-    conn.close()
+    try:
+        updated_wine = dbmanager.update_general_data(conn, wineid, name, region, grapes, year, quantity, drink_start, drink_end, cellar)
+        if updated_wine is None:
+            return jsonify({"message": "Wine or cellar not found"}), 404
+        res = dbmanager.get_wine_by_id(conn, wineid, cellar)
+    finally:
+        conn.close()
 
     return jsonify({"wine": res}), 200
 
 @app.post("/wine/<int:wineid>/custom-note")
 def update_custom_notes(wineid):
     data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
 
     notes = str(data.get("note", "")).strip()
 
     conn = dbmanager.connect()
-    updated_notes = dbmanager.update_custom_notes(conn, wineid, notes)
-    conn.close()
+    try:
+        if not dbmanager.wine_exists_in_cellar(conn, wineid, cellar):
+            return jsonify({"message": "Wine or cellar not found"}), 404
+        updated_notes = dbmanager.update_custom_notes(conn, wineid, notes)
+    finally:
+        conn.close()
 
     if updated_notes is None:
         return jsonify({"message": "Wine not found"}), 404
@@ -155,14 +241,21 @@ def update_custom_notes(wineid):
 @app.post("/wine/<int:wineid>/tasting-notes")
 def add_tasting_note(wineid):
     data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
     note = str(data.get("note", "")).strip()
 
     if not note:
         return jsonify({"message": "Tasting note is required"}), 400
 
     conn = dbmanager.connect()
-    notes = dbmanager.add_tasting_note(conn, wineid, note)
-    conn.close()
+    try:
+        if not dbmanager.wine_exists_in_cellar(conn, wineid, cellar):
+            return jsonify({"message": "Wine or cellar not found"}), 404
+        notes = dbmanager.add_tasting_note(conn, wineid, note)
+    finally:
+        conn.close()
 
     if notes is None:
         return jsonify({"message": "Wine not found"}), 404
@@ -173,14 +266,21 @@ def add_tasting_note(wineid):
 @app.delete("/wine/<int:wineid>/tasting-notes")
 def delete_tasting_note(wineid):
     data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
     note = str(data.get("note", "")).strip()
 
     if not note:
         return jsonify({"message": "Tasting note is required"}), 400
 
     conn = dbmanager.connect()
-    notes = dbmanager.remove_tasting_note(conn, wineid, note)
-    conn.close()
+    try:
+        if not dbmanager.wine_exists_in_cellar(conn, wineid, cellar):
+            return jsonify({"message": "Wine or cellar not found"}), 404
+        notes = dbmanager.remove_tasting_note(conn, wineid, note)
+    finally:
+        conn.close()
 
     if notes is None:
         return jsonify({"message": "Wine not found"}), 404
@@ -191,14 +291,21 @@ def delete_tasting_note(wineid):
 @app.post("/wine/<int:wineid>/pairings")
 def add_wine_pairing(wineid):
     data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
     pairing = str(data.get("pairing", "")).strip()
 
     if not pairing:
         return jsonify({"message": "Pairing is required"}), 400
 
     conn = dbmanager.connect()
-    pairings = dbmanager.add_pairing_to_wine(conn, wineid, pairing)
-    conn.close()
+    try:
+        if not dbmanager.wine_exists_in_cellar(conn, wineid, cellar):
+            return jsonify({"message": "Wine or cellar not found"}), 404
+        pairings = dbmanager.add_pairing_to_wine(conn, wineid, pairing)
+    finally:
+        conn.close()
 
     if pairings is None:
         return jsonify({"message": "Wine not found"}), 404
@@ -209,14 +316,21 @@ def add_wine_pairing(wineid):
 @app.delete("/wine/<int:wineid>/pairings")
 def delete_wine_pairing(wineid):
     data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
     pairing = str(data.get("pairing", "")).strip()
 
     if not pairing:
         return jsonify({"message": "Pairing is required"}), 400
 
     conn = dbmanager.connect()
-    pairings = dbmanager.remove_pairing_from_wine(conn, wineid, pairing)
-    conn.close()
+    try:
+        if not dbmanager.wine_exists_in_cellar(conn, wineid, cellar):
+            return jsonify({"message": "Wine or cellar not found"}), 404
+        pairings = dbmanager.remove_pairing_from_wine(conn, wineid, pairing)
+    finally:
+        conn.close()
 
     if pairings is None:
         return jsonify({"message": "Wine not found"}), 404
@@ -227,9 +341,15 @@ def delete_wine_pairing(wineid):
 @app.route("/pairing-wines")
 def get_pairing_wines():
     pairing = request.args.get("q", "")
+    cellar = selected_cellar()
+    if not cellar:
+        return cellar_required_response()
+
     conn = dbmanager.connect()
-    res = dbmanager.search_wines_by_pairing(conn, pairing, limit=50)
-    conn.close()
+    try:
+        res = dbmanager.search_wines_by_pairing(conn, pairing, cellar, limit=50)
+    finally:
+        conn.close()
     return jsonify({"wines": res})
 
 
@@ -278,7 +398,11 @@ def serve_upload(filename):
 
 @app.route("/add-to-cellar", methods=["POST"])
 def add():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
+    data["cellar"] = cellar
     print(data)
     try:
         thread = threading.Thread(target=infer_wine_details.Add_to_cellar, args=(data,))
@@ -293,7 +417,11 @@ def add():
 
 @app.route("/remove-from-cellar", methods=["POST"])
 def remove():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
+    cellar = selected_cellar(data)
+    if not cellar:
+        return cellar_required_response()
+    data["cellar"] = cellar
     try:
         infer_wine_details.Remove_from_cellar(data)
         return jsonify({"status": "removed"})

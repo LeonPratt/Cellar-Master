@@ -30,14 +30,12 @@ def create_tables(conn):
     """)
 
     # -----------------------
-    # CELLAR (INVENTORY)
+    # CELLARS
     # -----------------------
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS cellar (
-        wineid INTEGER PRIMARY KEY,
-        quantity INTEGER NOT NULL,
-        FOREIGN KEY (wineid) REFERENCES wines(wineid)
-            ON DELETE CASCADE
+    CREATE TABLE IF NOT EXISTS cellars (
+        cellarid INTEGER PRIMARY KEY,
+        name TEXT NOT NULL
     );
     """)
 

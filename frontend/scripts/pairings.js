@@ -6,13 +6,26 @@ const searchButton = document.querySelector(".search-btn");
 const summary = document.querySelector(".pairing-summary");
 const homeButton = document.querySelector(".nav-btn");
 const logo = document.getElementById("home");
+const currentCellarBox = document.querySelector(".current-cellar");
 homeButton.addEventListener("click", () => {
-    window.location.href = "/";
+    window.location.href = "/home";
 });
 
 logo.addEventListener("click", () => {
-    window.location.href = "/";
+    window.location.href = "/home";
 });
+
+function loadCurrentCellar(){
+    let cellar = localStorage.getItem("cellarmaster-selected-cellar") || "";
+
+    currentCellarBox.textContent = cellar;
+    return cellar
+}
+
+loadCurrentCellar()
+currentCellarBox.addEventListener("click",function(){
+    window.location.href="/"
+})
 
 function escapeHtml(value) {
     return String(value ?? "")
@@ -112,6 +125,12 @@ function renderWines(wines, query) {
 
 async function searchPairings() {
     const query = searchBox.value.trim();
+    const cellar = loadCurrentCellar();
+
+    if (!cellar) {
+        window.location.href = "/";
+        return;
+    }
 
     if (query === "") {
         summary.textContent = "Search for a food, such as steak, lamb, salmon or cheese.";
@@ -123,7 +142,7 @@ async function searchPairings() {
     renderMessage("Searching pairings");
 
     try {
-        const response = await fetch(`${API_URL}?q=${encodeURIComponent(query)}`);
+        const response = await fetch(`${API_URL}?q=${encodeURIComponent(query)}&c=${encodeURIComponent(cellar)}`);
 
         if (!response.ok) {
             throw new Error("Failed to fetch pairing wines");

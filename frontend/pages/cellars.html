@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="CellarMaster" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/apple-touch-icon.png" />
+  <link rel="stylesheet" href="/assets/styles/app.css" />
+  <title>Choose a Cellar | CellarMaster</title>
+</head>
+<body>
+  <main class="home-shell cellar-index-page">
+    <button class="top-bar" type="button" data-home-button aria-label="CellarMaster home">
+      <img class="logo" src="/assets/icons/logo.svg" alt="" />
+      <h1 class="brand-title">CellarMaster</h1>
+    </button>
+
+    <section class="content-panel home-panel cellar-picker-panel" aria-labelledby="cellar-picker-title">
+      <div class="index-intro">
+        <p class="eyebrow">Your collection</p>
+        <h2 id="cellar-picker-title">Welcome to CellarMaster</h2>
+        <p>Select a cellar to continue, or create a new place for your bottles.</p>
+      </div>
+
+      <div class="cellar-picker-heading">
+        <h3>Your cellars</h3>
+        <button class="cellar-create-btn" type="button" data-create-button>Create a cellar</button>
+      </div>
+
+      <form class="cellar-create-form" data-create-form hidden>
+        <label for="cellar-name">Cellar name</label>
+        <div class="cellar-create-controls">
+          <input id="cellar-name" name="cellar-name" maxlength="60" placeholder="e.g. Home cellar" required />
+          <button class="submit-btn" type="submit">Create</button>
+          <button class="submit-btn secondary" type="button" data-cancel-button>Cancel</button>
+        </div>
+      </form>
+
+      <p class="cellar-picker-status" data-status aria-live="polite"></p>
+      <div class="cellar-list cellar-picker-list" data-cellar-list role="list" aria-label="Your cellars" tabindex="0"></div>
+    </section>
+  </main>
+
+  <script src="/scripts/cellars.js"></script>
+</body>
+</html>
