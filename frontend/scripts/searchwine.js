@@ -42,9 +42,11 @@ function renderMessage(title, detail = "") {
     `;
 }
 
-async function fetchWines() {
+async function fetchWines(searchterm = "", inCellarOnlyFlag = false) {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(`${API_URL}?q=${encodeURIComponent(searchterm)}&in_cellar_only=${inCellarOnlyFlag ? 1 : 0}`,
+        {method: "GET"
+        });
 
         if (!response.ok) {
             throw new Error("Failed to fetch wines");
@@ -62,7 +64,7 @@ async function fetchWines() {
 
 function renderWines(wineArray) {
     wineList.innerHTML = "";
-
+    console.log("Rendering wines:", wineArray);
     if (wineArray.length === 0) {
         renderMessage("No wines found");
         return;
@@ -93,44 +95,37 @@ function renderWines(wineArray) {
 
             <div class="wine-actions">
                 <button class="action-btn view-btn" type="button">View</button>
-                <button class="action-btn delete-btn" type="button">Remove</button>
+                ${wine.quantity >0 ? '<button class="action-btn delete-btn" type="button">Remove wine</button>': '<div class="out-of-stock-label">Not in cellar</div>'}
             </div>
         `;
 
         wineCard.querySelector(".view-btn").addEventListener("click", () => {
             window.location.href = `/view?wineid=${encodeURIComponent(wine.wineid)}`;
         });
-
+        if (wine.quantity == 0) {
+            wineCard.style.backgroundColor = "#c0c0c0";
+        }
+        else{
         wineCard.querySelector(".delete-btn").addEventListener("click", () => {
-            removeWine(wine.wineid);
-        });
+            removeWine(wine);
+            });
+        }
+
 
         wineList.appendChild(wineCard);
     });
 }
 
-function searchWines() {
+async function searchWines() {
     const query = searchBox.value.toLowerCase().trim();
-
-    const filteredWines = wines.filter((wine) => {
-        const grapes = Array.isArray(wine.grapes) ? wine.grapes : [];
-
-        return (
-            String(wine.name ?? "").toLowerCase().includes(query) ||
-            grapes.some((grape) => String(grape).toLowerCase().includes(query)) ||
-            String(wine.region ?? "").toLowerCase().includes(query) ||
-            String(wine.year ?? "").includes(query)
-        );
-    });
-
-    renderWines(filteredWines);
+    filteredwines = await fetchWines(query, inCellarOnly.checked);
 }
 
-async function removeWine(wineId) {
+async function removeWine(wine) {
     try {
-        console.log(`Removing wine with ID: ${wineId}`);
+        console.log(`Removing wine with ID: ${wine.wineid}`);
         const response = await fetch(
-            `${API_URL}/${encodeURIComponent(parseInt(wineId))}`,
+            `${API_URL}/${encodeURIComponent(parseInt(wine.wineid))}`,
             { method: "DELETE" }
         );
         console.log(response);
@@ -138,8 +133,11 @@ async function removeWine(wineId) {
             throw new Error("Failed to remove wine");
         }
 
-        wines = wines.filter((wine) => wine.wineid !== wineId);
+        console.log(wine);
+        wine.quantity = 0;
         renderWines(wines);
+
+
     }
     catch (error) {
         console.error(error);

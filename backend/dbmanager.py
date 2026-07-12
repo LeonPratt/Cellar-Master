@@ -28,13 +28,13 @@ def connect(db=DB_DIR):
 def get_or_create_grape(conn, name):
     cur = conn.cursor()
 
-    cur.execute("SELECT grapeid FROM grapes WHERE name = ?", (name,))
+    cur.execute("SELECT grapeid FROM grapes WHERE name = ?", (name.title().strip(),))
     row = cur.fetchone()
 
     if row:
         return row[0]
 
-    cur.execute("INSERT INTO grapes (name) VALUES (?)", (name,))
+    cur.execute("INSERT INTO grapes (name) VALUES (?)", (name.title().strip(),))
     return cur.lastrowid
 
 
@@ -65,14 +65,13 @@ def remove_wine_from_cellar(conn, wineid:int, quantity:int = -1):
     cur = conn.cursor()
     if quantity == -1:
         cur.execute(
-            "DELETE FROM CELLAR WHERE wineid = ?;",
-            (str(wineid),))
-    cur.execute(
-        "UPDATE CELLAR SET quantity = quantity - ? WHERE wineid = ?;",
-        (quantity, wineid))
-    cur.execute(
-        "DELETE FROM CELLAR WHERE wineid = ? AND quantity <= 0;",
-        (str(wineid),))
+            "UPDATE CELLAR SET quantity = 0 WHERE wineid = ?;",
+            (wineid,))
+    else:
+        cur.execute(
+            "UPDATE CELLAR SET quantity = quantity - ? WHERE wineid = ?;",
+            (quantity, wineid))
+
     conn.commit()
 
     return True
@@ -287,14 +286,16 @@ def update_general_data(conn, wineid: int, name: str, region: str, grapes: list,
         SET start_year = ?, end_year = ?
         WHERE wineid = ?;
     """, (drink_start, drink_end, wineid))
+
+
     # Update the grapes associated with the wine
     
     cur.execute("DELETE FROM wine_grapes WHERE wineid = ?", (wineid,))
     
     for grape in grapes:
         with open("debug_log.txt", "a") as f:
-            f.write(f"Adding grape '{grape}' to wineid {wineid}\n")
-        grape_id = get_or_create_grape(conn, grape)
+            f.write(f"Adding grape '{grape.title().strip()}' to wineid {wineid}\n")
+        grape_id = get_or_create_grape(conn, grape.title().strip())
         cur.execute("""
             INSERT OR IGNORE INTO wine_grapes (wineid, grapeid)
             VALUES (?, ?);
@@ -340,10 +341,9 @@ def search_wines_by_pairing(conn, pairing, limit=20):
         AND fp.name LIKE ?
     GROUP BY w.wineid
     ORDER BY w.name
-    LIMIT ?
     """
 
-    cursor.execute(query, (search, limit))
+    cursor.execute(query, (search,))
     rows = cursor.fetchall()
 
     wines = []
@@ -395,10 +395,9 @@ def search_wines(conn, search_term="", limit=10,in_cellar_only=1):
         LEFT JOIN GRAPES g ON wg.grapeid = g.grapeid
         GROUP BY w.wineid
         ORDER BY w.wineid
-        LIMIT ?
         """
 
-        cursor.execute(query, (limit,))
+        cursor.execute(query, ())
 
     else:
         search = f"%{search_term}%"
@@ -420,14 +419,20 @@ def search_wines(conn, search_term="", limit=10,in_cellar_only=1):
             AND (
                 w.name LIKE ?
                 OR w.region LIKE ?
-                OR g.name LIKE ?
+                OR EXISTS (
+                    SELECT 1
+                    FROM WINE_GRAPES search_wg
+                    INNER JOIN GRAPES search_g ON search_wg.grapeid = search_g.grapeid
+                    WHERE search_wg.wineid = w.wineid
+                      AND search_g.name LIKE ?
+                )
+                OR w.year LIKE ?
             )
         GROUP BY w.wineid
         ORDER BY w.wineid
-        LIMIT ?
         """
 
-        cursor.execute(query, ( search, search, search, limit))
+        cursor.execute(query, ( search, search, search, search ))
 
     rows = cursor.fetchall()
 

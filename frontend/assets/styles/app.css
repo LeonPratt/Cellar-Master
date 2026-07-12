@@ -451,9 +451,28 @@ input:checked + .slider:before {
   color: white;
 }
 
+.out-of-stock-label {
+  border: 0;
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  font-size: 0.85rem;
+  font-weight: 720;
+  white-space: nowrap;
+
+  background: var(--danger);
+  color: white;
+}
+
+.out-of-stock {
+  color: var(--danger);
+  font-size: 0.85rem;
+  font-weight: 720;
+  white-space: nowrap;
+}
+
 .quantity-pill {
-  background: #efe8df;
-  color: var(--brand-dark);
+  background: var(--danger);
+  color: #ffffff;
 }
 
 
@@ -679,6 +698,9 @@ input:checked + .slider:before {
   font-weight: 760;
   line-height: 1.35;
 }
+.detail-value:focus {
+  outline: none;
+}
 
 .detail-section {
   border-top: 1px solid var(--border);
@@ -715,7 +737,6 @@ input:checked + .slider:before {
 .tasting-note-input,
 .pairing-input,
 .custom-note-input {
-  min-width: 0;
   height: 40px;
   flex: 1;
   border: 1px solid var(--border);
@@ -1141,7 +1162,7 @@ width:90px;
     align-items: flex-start;
     flex-direction: column;
   }
-
+  
   .wine-detail-layout {
     grid-template-columns: 1fr;
   }

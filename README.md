@@ -45,3 +45,10 @@ The app uses a database to store wines, notes, and pairing information.
 5. Open the app in your browser.
 6. Begin adding wines, notes, and pairings to your cellar.
 
+# Below are some screenshots of the web app
+
+![homepage](screenshots/Homepage.png)
+![search](screenshots/search.png)
+![viewwine](screenshots/viewwine.png)
+![viewwine2](screenshots/viewwine2.png)
+![parirings](screenshots/pairing.png)

@@ -95,12 +95,17 @@ function renderWines(wines, query) {
                     ${pairingTags}
                 </div>
             </div>
+            <div class="wine-actions">
+                <button class="action-btn view-btn" type="button">View</button>
 
-            <div class="quantity-pill">
-                ${escapeHtml(wine.quantity)} in cellar
+                <div class="quantity-pill">
+                    ${escapeHtml(wine.quantity)} in cellar
+                </div>
             </div>
         `;
-
+        wineCard.querySelector(".view-btn").addEventListener("click", () => {
+            window.location.href = `/view?wineid=${encodeURIComponent(wine.wineid)}`;
+        });
         wineList.appendChild(wineCard);
     });
 }

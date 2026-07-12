@@ -201,6 +201,11 @@ async function deleteTastingNote(note) {
     return response.json();
 }
 
+function resizeTextarea(textarea) {
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+}
+
 async function saveCustomNotes(note) {
         const response = await fetch(`/wine/${encodeURIComponent(wineId)}/custom-note`, {
         method: "POST",
@@ -489,6 +494,7 @@ function renderWine(wine) {
     renderCustomNotes(wine.custom_notes);
     renderPairings(wine.pairings);
     renderTastingNotes(formatTastingNotes(wine.tasting_notes));
+    resizeTextarea(customNotesInput);
 }
 
 async function loadWine() {

@@ -79,8 +79,11 @@ def assets(filename):
 
 @app.get("/wines")
 def getwines():
+    searchterm = request.args.get("q", "")
+    incellaronly = request.args.get("in_cellar_only", "0") == "1"
+
     conn = dbmanager.connect()
-    res = dbmanager.search_wines(conn, "", limit=5, in_cellar_only=1)
+    res = dbmanager.search_wines(conn, searchterm, limit=20, in_cellar_only=incellaronly)
     conn.close()
     return jsonify({"wines": res})
 
@@ -225,7 +228,7 @@ def delete_wine_pairing(wineid):
 def get_pairing_wines():
     pairing = request.args.get("q", "")
     conn = dbmanager.connect()
-    res = dbmanager.search_wines_by_pairing(conn, pairing, limit=20)
+    res = dbmanager.search_wines_by_pairing(conn, pairing, limit=50)
     conn.close()
     return jsonify({"wines": res})
 
