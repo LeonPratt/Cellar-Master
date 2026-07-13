@@ -25,6 +25,7 @@ def infer_basic(img, testing=False, local=False):
         return testdict
     response = ""
     if local:
+        print("local")
         unparsed_response = chat(
             model='gemma3:4b',
                 messages=[
@@ -56,7 +57,6 @@ def infer_basic(img, testing=False, local=False):
         with open("debug_log.txt", "a") as f:
             f.write(f"Unparsed response: {unparsed_response}\n")
             f.write(f"Parsed response: {response}\n")
-        return parseResponse(response)
     else:
         if OLLAMA_API_KEY == None:
             raise Exception("Ollama API key not set. Set it in .env")
@@ -71,8 +71,6 @@ def infer_basic(img, testing=False, local=False):
             'content': """
                     Look at the wine bottle image.
 
-                    Extract the following fields exactly as they appear on the label:
-
                     - producer: The winery or brand name.
                     - wine_name: The specific wine/cuvée name, excluding producer.
                     - vintage: The year.
@@ -81,9 +79,9 @@ def infer_basic(img, testing=False, local=False):
 
                     Important:
                     - Do not combine producer and wine name.
+                    - If a field is written in capitals, rewrite it in title format.
                     - Do not infer missing information.
                     - Do not rewrite names.
-                    - Preserve the exact spelling and punctuation from the label.
                     - If a field is not visible, return "unknown".
                     - Return only JSON.""",
                     'images': [img]
@@ -214,14 +212,14 @@ def parseResponse(response):
     print(data)
     parsed = json.loads(data)
 
-    year_value = parsed.get("year", 0)
+    year_value = parsed.get("vintage", 0)
     try:
         year_value = int(year_value)
     except (TypeError, ValueError):
         year_value = 0
 
     return {
-        "name": parsed.get("name", "").replace("unknown", "").strip(),
+        "name": parsed.get("wine_name", "").replace("unknown", "").strip(),
         "year": year_value,
         "grape_variety": parsed.get("grape_variety", "").replace("unknown", "").strip(),
         "region": parsed.get("region", "").replace("unknown", "").strip(),

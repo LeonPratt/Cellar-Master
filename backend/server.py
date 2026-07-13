@@ -27,8 +27,6 @@ app = Flask(__name__)
 def selected_cellar(data=None):
     """Read the active cellar consistently from the query string or JSON body."""
     cellar = request.args.get("c")
-    with open("debug.txt","a") as f:
-        f.write("cellar")
     if cellar is None and isinstance(data, dict):
         cellar = data.get("cellar")
     
@@ -202,8 +200,6 @@ def update_general_data(wineid):
     quantity = data.get("quantity", None)
     drink_start = data.get("drink_window_start", 0)
     drink_end = data.get("drink_window_end", 0)
-    with open("debug_log.txt", "a") as f:
-        f.write(f"Received data for wineid {wineid}: name={name}, region={region}, grapes={grapes}, year={year}, quantity={quantity}, drink_start={drink_start}, drink_end={drink_end}\n")
     conn = dbmanager.connect()
     try:
         updated_wine = dbmanager.update_general_data(conn, wineid, name, region, grapes, year, quantity, drink_start, drink_end, cellar)
