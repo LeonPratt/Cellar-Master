@@ -47,7 +47,7 @@ function loadCurrentCellar(){
     currentCellarBox.textContent = cellar;
     return cellar
 }
-loadCurrentCellar()
+const currentCellar = loadCurrentCellar()
 
 function capitalize(text) {
     return String(text ?? "")
@@ -189,7 +189,9 @@ async function saveTastingNote(note) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ note })
+        body: JSON.stringify({ note:note,
+            cellar:currentCellar
+         })
     });
 
     if (!response.ok) {
@@ -205,7 +207,9 @@ async function deleteTastingNote(note) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ note })
+        body: JSON.stringify({ note:note,
+            cellar:currentCellar
+        })
     });
 
     if (!response.ok) {
@@ -226,7 +230,9 @@ async function saveCustomNotes(note) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({note})
+        body: JSON.stringify({note:note,
+            cellar:currentCellar
+        })
     });
 
     if (!response.ok) {
@@ -242,7 +248,9 @@ async function savePairing(pairing) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ pairing })
+        body: JSON.stringify({ pairing:pairing,
+            cellar:currentCellar
+         })
     });
 
     if (!response.ok) {
@@ -258,7 +266,9 @@ async function deletePairing(pairing) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ pairing })
+        body: JSON.stringify({ pairing:pairing,
+            cellar:currentCellar
+         })
     });
 
     if (!response.ok) {
@@ -277,17 +287,8 @@ generalDataForm.addEventListener("submit", async (event) => {
     const quantity = quantityEl.value.trim();
     const drinkStart = drinkstartEl.value.trim();
     const drinkEnd = drinkendEl.value.trim();
-    
-    let body = JSON.stringify({
-                name,
-                region,
-                grapes,
-                year,
-                quantity,
-                drink_window_start: drinkStart,
-                drink_window_end: drinkEnd
-            })
-    console.log(body);
+    const cellar = currentCellar;
+
     try {
         const response = await fetch(`/wine/${encodeURIComponent(wineId)}/general-data`, {
             method: "POST",
@@ -301,7 +302,8 @@ generalDataForm.addEventListener("submit", async (event) => {
                 year,
                 quantity,
                 drink_window_start: drinkStart,
-                drink_window_end: drinkEnd
+                drink_window_end: drinkEnd,
+                cellar:cellar
             })
         });
 

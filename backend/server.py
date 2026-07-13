@@ -190,6 +190,7 @@ def get_wine(wineid):
 @app.post("/wine/<int:wineid>/general-data")
 def update_general_data(wineid):
     data = request.get_json(silent=True) or {}
+    print(data)
     cellar = selected_cellar(data)
     if not cellar:
         return cellar_required_response()

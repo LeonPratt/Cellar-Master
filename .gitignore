@@ -6,3 +6,4 @@ test_photos/
 /.VSCodeCounter/
 pem/cert.pem
 pem/key.pem
+backend/db.sql
