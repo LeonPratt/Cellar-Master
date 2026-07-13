@@ -38,7 +38,7 @@ document.getElementById("add").addEventListener("click", async (e) => {
     return;
   }
   data.imgpath = params.get("img");
-
+  data.producer = params.get("producer");
   console.log("data: " + JSON.stringify(data));
   data.cellar = cellar;
   const res = await fetch(`/add-to-cellar?c=${encodeURIComponent(cellar)}`, {

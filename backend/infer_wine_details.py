@@ -219,6 +219,7 @@ def parseResponse(response):
         year_value = 0
 
     return {
+        "producer":parsed.get("producer", "").strip(),
         "name": parsed.get("wine_name", "").replace("unknown", "").strip(),
         "year": year_value,
         "grape_variety": parsed.get("grape_variety", "").replace("unknown", "").strip(),

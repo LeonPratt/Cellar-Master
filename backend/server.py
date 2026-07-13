@@ -383,6 +383,7 @@ def upload_photo():
         "year": details["year"],
         "grape_variety": details["grape_variety"],
         "region": details["region"],
+        "producer":details["producer"],
         "imgpath": save_name
     })
 
