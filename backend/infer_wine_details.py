@@ -114,6 +114,7 @@ def gen_extra_details(wine_details):
     1. Typical tasting notes.
     2. Recommended food pairings.
     3. The optimum drinking window.
+    4. average price.
 
     Research requirements:
     - Use web_search first.
@@ -142,12 +143,15 @@ def gen_extra_details(wine_details):
         "tasting_notes": "...",
         "food_pairings": "...",
         "start_year": 0,
-        "end_year": 0
+        "end_year": 0,
+        "price": 0
     }}
 
     Rules:
     - tasting_notes is a "|" separated list.
     - food_pairings is a "|" separated list.
+    - price is in GPB. '£' symbol must be stripped: £12.41 -> 12.41 (as a float)
+    - price must be the average price at which it is actually avaliable to buy it at. Do not return a price if it is out of stock at that price.
     - Every item must contain at most three words.
     - Include between 5 and 12 tasting notes.
     - Include between 4 and 10 food pairings.
@@ -156,14 +160,14 @@ def gen_extra_details(wine_details):
     - Do not include markdown.
     - start_year and end_year must be four-digit calendar years.
     - If any field cannot be determined confidently, return "unknown" for that field.
-
     Example:
 
     {{
         "tasting_notes":"blackcurrant|cedar|graphite|violet|cigar box|firm tannins",
         "food_pairings":"roast lamb|ribeye steak|venison|aged cheddar",
         "start_year":2028,
-        "end_year":2042
+        "end_year":2042,
+        "price":15.00
     }}
     """
     }]
@@ -224,6 +228,7 @@ def parseResponse(response):
         "year": year_value,
         "grape_variety": parsed.get("grape_variety", "").replace("unknown", "").strip(),
         "region": parsed.get("region", "").replace("unknown", "").strip(),
+        "price":parsed.get("price","").replace("unknown","").strip()
     }
 
 def Add_to_cellar(data):
@@ -238,6 +243,7 @@ def Add_to_cellar(data):
             data["food_pairings"] = extra_details["food_pairings"].split("|")
             data["drink_window_start"] = extra_details["start_year"]
             data["drink_window_end"] = extra_details["end_year"]
+            data["price"] = extra_details["price"]
             dbmanager.insert_new_wine(conn, data, cellar)
         else:
             dbmanager.insert_preexisting_wine(conn, wineid, cellar, data["quantity"])

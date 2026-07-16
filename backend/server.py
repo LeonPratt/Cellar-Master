@@ -201,9 +201,11 @@ def update_general_data(wineid):
     quantity = data.get("quantity", None)
     drink_start = data.get("drink_window_start", 0)
     drink_end = data.get("drink_window_end", 0)
+    price = data.get("price","0")
+    print(price)
     conn = dbmanager.connect()
     try:
-        updated_wine = dbmanager.update_general_data(conn, wineid, name, region, grapes, year, quantity, drink_start, drink_end, cellar)
+        updated_wine = dbmanager.update_general_data(conn, wineid, name, region, grapes, year, quantity, drink_start, drink_end,price, cellar)
         if updated_wine is None:
             return jsonify({"message": "Wine or cellar not found"}), 404
         res = dbmanager.get_wine_by_id(conn, wineid, cellar)

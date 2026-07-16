@@ -25,7 +25,8 @@ def create_tables(conn):
         region TEXT,
         tasting_notes TEXT,
         Custom_notes TEXT,
-        image_path TEXT
+        image_path TEXT,
+        price SMALLMONEY
     );
     """)
 

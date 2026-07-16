@@ -221,7 +221,8 @@ def insert_new_wine(conn, data: dict, cellarname: str):
         drink_window_end: int,
         wine_notes: list[str],
         quantity: int,
-        imgpath:str
+        imgpath:str,
+        price:float
     }
     """
 
@@ -232,14 +233,15 @@ def insert_new_wine(conn, data: dict, cellarname: str):
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO wines (name, year, region, tasting_notes, image_path)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO wines (name, year, region, tasting_notes, image_path, price)
+        VALUES (?, ?, ?, ?, ?, ?)
     """, (
         data["name"],
         data["year"],
         data["region"],
         data["tasting_notes"],
-        data["imgpath"]
+        data["imgpath"],
+        data["price"]
     ))
 
     wineid = cur.lastrowid
@@ -375,7 +377,7 @@ def get_all_wineids_from_pairing(conn, pairing, cellarname):
     wineids = cur.fetchall()
     return [x[0] for x in wineids]
 
-def update_general_data(conn, wineid: int, name: str, region: str, grapes: list, year: int, quantity: int, drink_start: int, drink_end: int, cellarname: str):
+def update_general_data(conn, wineid: int, name: str, region: str, grapes: list, year: int, quantity: int, drink_start: int, drink_end: int, price:float,cellarname: str):
     if not wine_id_exists(conn, wineid):
         return None
 
@@ -388,9 +390,9 @@ def update_general_data(conn, wineid: int, name: str, region: str, grapes: list,
     # Update the wines table
     cur.execute("""
         UPDATE wines
-        SET name = ?, region = ?, year = ?
+        SET name = ?, region = ?, year = ?, price = ?
         WHERE wineid = ?;
-    """, (name, region, year, wineid))
+    """, (name, region, year,price, wineid))
 
     # Update the cellar table
     cur.execute(f"""
@@ -603,7 +605,8 @@ def get_wine_by_id(conn, wineid: int, cellarname: str):
             w.image_path,
             dw.start_year,
             dw.end_year,
-            w.Custom_notes
+            w.Custom_notes,
+            w.price
         FROM WINES w
         LEFT JOIN {cellar_table} c ON w.wineid = c.wineid
         LEFT JOIN WINE_GRAPES wg ON w.wineid = wg.wineid
@@ -634,7 +637,8 @@ def get_wine_by_id(conn, wineid: int, cellarname: str):
         "imgpath": f"{row[8]}.png" if row[8] else "assets/images/bottle_placeholder.png",
         "drink_window_start": row[9] if row[9] else "Unknown",
         "drink_window_end": row[10] if row[10] else "Unknown",
-        "custom_notes": row[11] if row[11] else ""
+        "custom_notes": row[11] if row[11] else "",
+        "price":row[12] if row[12] else ""
     }
 
 

@@ -9,6 +9,7 @@ const yearEl = document.querySelector("[data-wine-year]");
 const quantityEl = document.querySelector("[data-wine-quantity]");
 const drinkstartEl = document.querySelector("[data-wine-drink-start]");
 const drinkendEl = document.querySelector("[data-wine-drink-end]");
+const priceEL = document.querySelector("[data-wine-price]");
 const generalDataForm = document.querySelector("[data-general-detail-form]");
 const customNotesInput = document.querySelector("[data-wine-custom-note]");
 const customNotesForm = document.querySelector("[data-custom-note-form]");
@@ -287,6 +288,7 @@ generalDataForm.addEventListener("submit", async (event) => {
     const quantity = quantityEl.value.trim();
     const drinkStart = drinkstartEl.value.trim();
     const drinkEnd = drinkendEl.value.trim();
+    const price = priceEL.value.trim().substring(1); 
     const cellar = currentCellar;
 
     try {
@@ -303,6 +305,7 @@ generalDataForm.addEventListener("submit", async (event) => {
                 quantity,
                 drink_window_start: drinkStart,
                 drink_window_end: drinkEnd,
+                price:price,
                 cellar:cellar
             })
         });
@@ -497,6 +500,7 @@ function renderWine(wine) {
     const quantity = wine.quantity || "0";
     const drinkStart = wine.drink_window_start || "Unknown";
     const drinkEnd = wine.drink_window_end || "Unknown";
+    const price = "£"+wine.price;
     document.title = `${wine.name} | CellarMaster`;
     nameEl.value = wine.name || "Unnamed wine";
     summaryEl.textContent = `${grapes} from ${region}`;
@@ -506,6 +510,7 @@ function renderWine(wine) {
     quantityEl.value = quantity;
     drinkstartEl.value = drinkStart;
     drinkendEl.value = drinkEnd;
+    priceEL.value = price;
     renderImage(wine);
     renderCustomNotes(wine.custom_notes);
     renderPairings(wine.pairings);
