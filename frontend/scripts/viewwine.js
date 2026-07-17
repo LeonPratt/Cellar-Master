@@ -3,6 +3,7 @@ const wineId = params.get("wineid");
 
 const nameEl = document.querySelector("[data-wine-name]");
 const summaryEl = document.querySelector("[data-wine-summary]");
+const producerEL = document.querySelector("[data-wine-producer]");
 const regionEl = document.querySelector("[data-wine-region]");
 const grapesEl = document.querySelector("[data-wine-grapes]");
 const yearEl = document.querySelector("[data-wine-year]");
@@ -282,13 +283,15 @@ async function deletePairing(pairing) {
 generalDataForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const name = nameEl.value.trim();
+    const producer = producerEL.value.trim();
     const region = regionEl.value.trim();
     const grapes = grapesEl.value.trim().split("/");
     const year = yearEl.value.trim();
     const quantity = quantityEl.value.trim();
     const drinkStart = drinkstartEl.value.trim();
     const drinkEnd = drinkendEl.value.trim();
-    const price = priceEL.value.trim().substring(1); 
+    const price = priceEL.value.trim().substring(1);
+
     const cellar = currentCellar;
 
     try {
@@ -482,11 +485,13 @@ function renderError(title, detail) {
     nameEl.textContent = title;
     summaryEl.textContent = detail;
     regionEl.textContent = "Unknown";
+    producerEL.textContent = "Unkonwn"
     grapesEl.textContent = "Unknown";
     yearEl.textContent = "Unknown";
     quantityEl.textContent = "Unknown";
     drinkstartEl.textContent = "Unknown";
     drinkendEl.textContent = "Unknown";
+    priceEL.textContent = "unkown";
     renderImage({});
     renderPairings([]);
     renderTastingNotes([]);
@@ -495,6 +500,7 @@ function renderError(title, detail) {
 function renderWine(wine) {
     console.log("Rendering wine:", wine);
     const grapes = formatList(wine.grapes, "Grape unknown");
+    const producer = wine.producer || "Producer unknown";
     const region = wine.region || "Region unknown";
     const year = wine.year || "Year unknown";
     const quantity = wine.quantity || "0";
@@ -505,6 +511,7 @@ function renderWine(wine) {
     nameEl.value = wine.name || "Unnamed wine";
     summaryEl.textContent = `${grapes} from ${region}`;
     regionEl.value = region;
+    producerEL.value = producer;
     grapesEl.value = grapes;
     yearEl.value = year;
     quantityEl.value = quantity;

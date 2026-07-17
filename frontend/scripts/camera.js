@@ -221,6 +221,7 @@ async function sendPhoto() {
     url.searchParams.set("grape_variety", result.grape_variety);
     url.searchParams.set("region", result.region);
     url.searchParams.set("year", result.year);
+    url.searchParams.set("producer", result.producer);
     url.searchParams.set("status", "success");
 
     window.location.href = url.toString();

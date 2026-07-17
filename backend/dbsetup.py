@@ -26,7 +26,8 @@ def create_tables(conn):
         tasting_notes TEXT,
         Custom_notes TEXT,
         image_path TEXT,
-        price SMALLMONEY
+        price SMALLMONEY,
+        producer TEXT
     );
     """)
 
@@ -39,6 +40,22 @@ def create_tables(conn):
         name TEXT NOT NULL
     );
     """)
+
+
+    # -----------------------
+    # CELLAR
+    # -----------------------
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS cellar (
+                cellarid INTEGER NOT NULL,
+                wineid INTEGER NOT NULL,
+                quantity INTEGER DEFAULT 0,
+                PRIMARY KEY (cellarid, wineid),
+                FOREIGN KEY (cellarid) REFERENCES cellars(cellarid) ON DELETE CASCADE,
+                FOREIGN KEY (wineid) REFERENCES wines(wineid) ON DELETE CASCADE);
+    """)
+
 
     # -----------------------
     # DRINKING WINDOW

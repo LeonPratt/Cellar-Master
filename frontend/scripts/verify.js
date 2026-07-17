@@ -8,8 +8,11 @@ if (filename) {
 }
 
 document.querySelector('input[name="name"]').value = params.get("name") || "";
+document.querySelector('input[name="producer"]').value = params.get("producer") || "";
+console.log(params.get("producer"));
 document.querySelector('input[name="grape_variety"]').value = params.get("grape_variety") || "";
 document.querySelector('input[name="region"]').value = params.get("region") || "";
+
 if(params.get("year") == "0"){
   document.querySelector('input[name="year"]').value = "Year unknown";
 }
@@ -38,7 +41,6 @@ document.getElementById("add").addEventListener("click", async (e) => {
     return;
   }
   data.imgpath = params.get("img");
-  data.producer = params.get("producer");
   console.log("data: " + JSON.stringify(data));
   data.cellar = cellar;
   const res = await fetch(`/add-to-cellar?c=${encodeURIComponent(cellar)}`, {

@@ -14,7 +14,7 @@ import dbmanager
 from ollama import chat, web_fetch, web_search, Client
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
-def infer_basic(img, testing=False, local=False):
+def infer_basic(img, known_wines,testing=False, local=False):
     if testing:
         testdict = {
             "name": "The Virgilius",
@@ -24,6 +24,62 @@ def infer_basic(img, testing=False, local=False):
             }
         return testdict
     response = ""
+    message =  f"""
+    You are an expert wine label reader.
+
+    You will be given:
+
+    1. An image of a wine bottle.
+    2. A list of wines that are already known to the application.
+
+    Known wines:
+    {known_wines}
+
+    Your task is to identify the wine shown in the image.
+
+    Before extracting information, compare the bottle to the list of known wines.
+
+    Rules:
+
+    - If the bottle clearly matches one of the known wines, return the details EXACTLY as they appear in the known wines list.
+    - Do not change spelling, punctuation, capitalisation or wording.
+    - Do not combine or split fields.
+    - Do not "improve" the names.
+    - The returned JSON must match the chosen known wine.
+    - If the name, producer, grapes etc match that of a known wine, return the details as they appear in the known wines list, only with the year updated
+    - If the bottle does not clearly match any known wine, extract the information directly from the label.
+
+    When extracting from the label:
+
+    - producer: The winery or producer name only.
+    - name: The cuvée or wine name only (do not include the producer).
+    - year: The four-digit vintage year.
+    - grapes: The grape variety or blend.
+    - region: The wine region.
+
+    Extraction rules:
+    - note that usually (if applicable) the name of the wine is the name of the Châteu
+    - Copy text exactly as it appears on the label whenever possible.
+    - You should correctly capitalise text. CHARDONNAY -> Chardonnay and CABERNET SAUVIGNON -> Cabernet Sauvignon
+    - Do not infer missing information.
+    - Do not guess.
+    - If a field is not visible, return "unknown".
+    - If the vintage is unknown, return 0.
+    - Return only valid JSON.
+    - Do not include markdown or explanations.
+    - Grapes need to be listed in a single string separated by ','
+        -- eg if a wine is a Merlot and Shiraz blend then: "grapes":"Merlot/Shiraz"
+
+    The JSON must have the following structure:
+
+    {{
+        "producer": "Penfolds",
+        "name": "Penfolds Bin 389",
+        "year": 2022,
+        "grapes": "Cabernet Sauvignon/Shiraz",
+        "region": "South Australia"
+    }}
+                    """
     if local:
         print("local")
         unparsed_response = chat(
@@ -31,24 +87,7 @@ def infer_basic(img, testing=False, local=False):
                 messages=[
                     {
                     'role': 'user',
-                    'content': """
-                    Look at the wine bottle image.
-
-                    Extract the following fields exactly as they appear on the label:
-
-                    - producer: The winery or brand name.
-                    - wine_name: The specific wine/cuvée name, excluding producer.
-                    - vintage: The year.
-                    - grape_variety: The grape(s).
-                    - region: The wine region.
-
-                    Important:
-                    - Do not combine producer and wine name.
-                    - Do not infer missing information.
-                    - Do not rewrite names.
-                    - Preserve the exact spelling and punctuation from the label.
-                    - If a field is not visible, return "unknown".
-                    - Return only JSON.""",
+                    'content': message,
                     'images': [img]
                     }
                 ]
@@ -68,27 +107,13 @@ def infer_basic(img, testing=False, local=False):
         messages = [
         {
             'role': 'user',
-            'content': """
-                    Look at the wine bottle image.
-
-                    - producer: The winery or brand name.
-                    - wine_name: The specific wine/cuvée name, excluding producer.
-                    - vintage: The year.
-                    - grape_variety: The grape(s).
-                    - region: The wine region.
-
-                    Important:
-                    - Do not combine producer and wine name.
-                    - If a field is written in capitals, rewrite it in title format.
-                    - Do not infer missing information.
-                    - Do not rewrite names.
-                    - If a field is not visible, return "unknown".
-                    - Return only JSON.""",
-                    'images': [img]
+            'content':message,
+            'images': [img]
         },
         ]
         for part in client.chat('gemma4:31b-cloud', messages=messages, stream=True):
             response += part['message']['content']
+    print(response)
     return parseResponse(response)
 
 
@@ -216,7 +241,7 @@ def parseResponse(response):
     print(data)
     parsed = json.loads(data)
 
-    year_value = parsed.get("vintage", 0)
+    year_value = parsed.get("year", 0)
     try:
         year_value = int(year_value)
     except (TypeError, ValueError):
@@ -224,9 +249,9 @@ def parseResponse(response):
 
     return {
         "producer":parsed.get("producer", "").strip(),
-        "name": parsed.get("wine_name", "").replace("unknown", "").strip(),
+        "name": parsed.get("name", "").replace("unknown", "").strip(),
         "year": year_value,
-        "grape_variety": parsed.get("grape_variety", "").replace("unknown", "").strip(),
+        "grape_variety": parsed.get("grapes", "").replace("unknown", "").strip(),
         "region": parsed.get("region", "").replace("unknown", "").strip(),
         "price":parsed.get("price","").replace("unknown","").strip()
     }
@@ -235,7 +260,7 @@ def Add_to_cellar(data):
     conn = dbmanager.connect()
     try:
         cellar = data["cellar"]
-        wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
+        wineid = dbmanager.wine_exists(conn, data["name"], data["year"], data["producer"])
 
         if wineid is None:
             extra_details = gen_extra_details(data)
@@ -254,7 +279,7 @@ def Add_to_cellar(data):
 def Remove_from_cellar(data):
     conn = dbmanager.connect()
     try:
-        wineid = dbmanager.wine_exists(conn, data["name"], data["year"])
+        wineid = dbmanager.wine_exists(conn, data["name"], data["year"],data["producer"])
 
         if wineid is None:
             return False

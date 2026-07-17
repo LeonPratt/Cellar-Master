@@ -24,13 +24,18 @@
 
         <article class="wine-detail-content">
           <div class="wine-detail-header">
-            <p class="eyebrow">Cellar bottle</p>
+            <p class="eyebrow">Cellar</p>
             <input type="text" class="wine-detail-title" data-wine-name>
 
             <div class="wine-detail-subtitle" data-wine-summary></div>
           </div>
 
           <form class="detail-grid" data-general-detail-form>
+            <div class="detail-stat">
+              <span class="detail-label">Producer</span>
+              <input type="text" class="detail-value" data-wine-producer placeholder = "unknown" name="producer" />
+            </div>
+
             <div class="detail-stat">
               <span class="detail-label">Region</span>
               <input type="text" class="detail-value" data-wine-region placeholder = "unknown" name="region" />
