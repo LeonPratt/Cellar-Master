@@ -15,6 +15,7 @@ It is designed to feel easy and practical, whether you are building a personal c
 ## Usage
 
 - Open the web app in your browser
+- Create or select a cellar
 - Select 'Add or Remove wine'
 - Take a photo of a bottle
 - Verify the extracted details are correct
@@ -25,7 +26,7 @@ It is designed to feel easy and practical, whether you are building a personal c
 
 The app uses a database to store wines, notes, and pairing information.
 
-![Database schema](backend/mermaid-diagram.png)
+![Database schema](screenshots\dbschema.png)
 
 ## Project structure
 
@@ -46,7 +47,7 @@ The app uses a database to store wines, notes, and pairing information.
 6. Begin adding wines, notes, and pairings to your cellar.
 
 # Below are some screenshots of the web app
-
+![cellarselection](screenshots/cellarspage.png)
 ![homepage](screenshots/Homepage.png)
 ![search](screenshots/search.png)
 ![viewwine](screenshots/viewwine.png)

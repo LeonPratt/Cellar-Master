@@ -81,7 +81,6 @@ def infer_basic(img, known_wines,testing=False, local=False):
     }}
                     """
     if local:
-        print("local")
         unparsed_response = chat(
             model='gemma3:4b',
                 messages=[
@@ -113,12 +112,10 @@ def infer_basic(img, known_wines,testing=False, local=False):
         ]
         for part in client.chat('gemma4:31b-cloud', messages=messages, stream=True):
             response += part['message']['content']
-    print(response)
     return parseResponse(response)
 
 
 def gen_extra_details(wine_details):
-    print(wine_details)
     client = Client(
         host="https://ollama.com",
         headers={'Authorization': 'Bearer ' + OLLAMA_API_KEY}
@@ -238,7 +235,6 @@ def parseResponse(response):
         raise ValueError(f"Could not find JSON in response: {response}")
 
     data = match.group(0)
-    print(data)
     parsed = json.loads(data)
 
     year_value = parsed.get("year", 0)
@@ -289,40 +285,3 @@ def Remove_from_cellar(data):
         )
     finally:
         conn.close()
-
-    
-
-
-
-
-
-"""
-```json
-{
-  "name": "The Virgilius",
-  "year": 2001,
-  "grape_variety": "Viognier",
-  "region": "Eden Valley"
-}
-```
-
-r = parseResponse(res)
-k = gen_extra_details(r, True)
-print(k)
-"""
-
-"""
-model_loc = sys.argv[1]
-model_name = sys.argv[2]    
-imname = "C:\\Users\\leona\\OneDrive\\Documents\\GitHub\\vinum\\test_photos\\testvirgilius_resized.jpg"
-img = cv2.imread(imname)
-if len(sys.argv) >= 4:
-    img = sys.argv[3]
-
-if model_loc == "lcl":
-    local(img)
-
-elif model_loc == "cld":
-    print(cloud(img))
-"""
-

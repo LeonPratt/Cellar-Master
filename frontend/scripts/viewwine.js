@@ -309,7 +309,8 @@ generalDataForm.addEventListener("submit", async (event) => {
                 drink_window_start: drinkStart,
                 drink_window_end: drinkEnd,
                 price:price,
-                cellar:cellar
+                cellar:cellar,
+                producer:producer
             })
         });
 

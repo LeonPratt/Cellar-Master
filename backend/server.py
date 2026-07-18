@@ -190,7 +190,6 @@ def get_wine(wineid):
 @app.post("/wine/<int:wineid>/general-data")
 def update_general_data(wineid):
     data = request.get_json(silent=True) or {}
-    print(data)
     cellar = selected_cellar(data)
     if not cellar:
         return cellar_required_response()
@@ -203,7 +202,6 @@ def update_general_data(wineid):
     drink_end = data.get("drink_window_end", 0)
     price = data.get("price","0")
     producer = data.get("producer", "").strip()
-    print(price)
     conn = dbmanager.connect()
     try:
         updated_wine = dbmanager.update_general_data(conn, wineid, name, region, grapes, year, quantity, drink_start, drink_end,price,producer, cellar)
@@ -376,9 +374,7 @@ def upload_photo():
     try:
         conn = dbmanager.connect()
         known_wines = dbmanager.get_all_known_wines(conn)
-        print(known_wines)
         details = infer_wine_details.infer_basic(save_path,known_wines, False, local=localInfer)
-        print("producer:::", details["producer"])
         conn.close()
     except Exception as e:
         print(e)
@@ -410,7 +406,6 @@ def add():
     if not cellar:
         return cellar_required_response()
     data["cellar"] = cellar
-    print(data)
     try:
         thread = threading.Thread(target=infer_wine_details.Add_to_cellar, args=(data,))
         #infer_wine_details.Add_to_cellar(data)
