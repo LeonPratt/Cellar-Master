@@ -24,12 +24,26 @@
           autocomplete="off"
         />
         <label class="cellar-filter">
-          <span class="cellar-filter-label">In cellar</span>
+          <span class="cellar-filter-label">In stock</span>
           <span class="switch">
             <input type="checkbox" class="in-cellar-only">
             <span class="slider round" aria-hidden="true"></span>
           </span>
         </label>
+        <div class="wine-sort">
+          <span>Sort by</span>
+          <button class="wine-sort-select" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span data-sort-label>Name</span>
+            <span class="wine-sort-caret" aria-hidden="true"></span>
+          </button>
+          <div class="wine-sort-menu" role="listbox" aria-label="Sort wines by" hidden>
+            <button type="button" role="option" aria-selected="true" data-sort-value="name">Name</button>
+            <button type="button" role="option" aria-selected="false" data-sort-value="drink_window_start">Drink window start</button>
+            <button type="button" role="option" aria-selected="false" data-sort-value="drink_window_end">Drink window end</button>
+            <button type="button" role="option" aria-selected="false" data-sort-value="year">Year</button>
+          </div>
+        </div>
+        <button class="sort-direction-btn" type="button" aria-label="Sort ascending">Ascending</button>
       </div>
 
       <div class="wine-list"></div>
@@ -39,6 +53,17 @@
       <button class="nav-btn" type="button">Home</button>
     </nav>
   </main>
+
+  <div class="popup-backdrop" data-wine-delete-confirmation>
+    <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="wine-delete-confirmation-title" aria-describedby="wine-delete-confirmation-message">
+      <h2 id="wine-delete-confirmation-title">Remove wine?</h2>
+      <p id="wine-delete-confirmation-message" data-wine-delete-confirmation-message></p>
+      <div class="popup-actions">
+        <button type="button" data-wine-delete-cancel>Cancel</button>
+        <button class="action-btn delete-btn" type="button" data-delete-confirm data-wine-delete-confirm>Remove</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/scripts/searchwine.js"></script>
 </body>

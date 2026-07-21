@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/icon.png" />
-  <title>Camera</title>
+  <title>Scan a Wine Label | CellarMaster</title>
   <link rel="stylesheet" href="/assets/styles/app.css" />
 </head>
 <body class="camera-body">
@@ -28,18 +28,27 @@
 
   <div class="camera-overlay">
     <div class="camera-top">
-            <img id="returnicon" class="icon-returnarrow"src="/assets/icons/returnarrow.svg" alt="" onclick="window.location.href='/home';"/>
+      <button id="returnicon" class="camera-back-button" type="button" aria-label="Back to cellar tools" onclick="window.location.href='/add_remove';">
+        <img src="/assets/icons/returnarrow.svg" alt="" />
+      </button>
+      <div class="camera-title" aria-hidden="true">
+        <span>CellarMaster</span>
+        <strong data-camera-step-title>Capture the front label</strong>
+      </div>
       <button id="switchCameraButton" type="button" class="icon-button" aria-label="Switch camera">
         <img src="/assets/icons/switch_cam.svg" alt=""/>
       </button>
     </div>
 
     <div class="camera-bottom">
-      <input id="uploadInput" type="file" accept="image/*" hidden />
-      <button id="uploadButton" type="button" class="icon-button" aria-label="Upload image">
-        <img src="/assets/icons/uploadImage.svg" alt="" />
-      </button>
-      <button id="captureButton" type="button" aria-label="Capture photo"></button>
+      <p class="camera-guidance" data-camera-guidance>Centre the front label in the frame, then capture a clear photo.</p>
+      <div class="camera-controls">
+        <input id="uploadInput" type="file" accept="image/*" hidden />
+        <button id="uploadButton" type="button" class="icon-button" aria-label="Upload image">
+          <img src="/assets/icons/uploadImage.svg" alt="" />
+        </button>
+        <button id="captureButton" type="button" aria-label="Capture photo"></button>
+      </div>
     </div>
   </div>
 

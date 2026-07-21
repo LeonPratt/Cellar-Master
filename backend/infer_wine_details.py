@@ -14,7 +14,7 @@ import dbmanager
 from ollama import chat, web_fetch, web_search, Client
 OLLAMA_API_KEY = os.environ.get("OLLAMA_API_KEY")
 
-def infer_basic(img, known_wines,testing=False, local=False):
+def infer_basic(imgs, known_wines,testing=False, local=False):
     if testing:
         testdict = {
             "name": "The Virgilius",
@@ -29,7 +29,8 @@ def infer_basic(img, known_wines,testing=False, local=False):
 
     You will be given:
 
-    1. An image of a wine bottle.
+    1. An image of the front label of a wine bottle.
+    2. An image of the back label of the same wine bottle.
     2. A list of wines that are already known to the application.
 
     Known wines:
@@ -87,7 +88,7 @@ def infer_basic(img, known_wines,testing=False, local=False):
                     {
                     'role': 'user',
                     'content': message,
-                    'images': [img]
+                    'images': imgs
                     }
                 ]
             )
@@ -107,7 +108,7 @@ def infer_basic(img, known_wines,testing=False, local=False):
         {
             'role': 'user',
             'content':message,
-            'images': [img]
+            'images': imgs
         },
         ]
         for part in client.chat('gemma4:31b-cloud', messages=messages, stream=True):

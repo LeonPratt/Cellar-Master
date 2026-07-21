@@ -8,12 +8,15 @@ const statusText = document.getElementById('statusText');
 const errorPopup = document.getElementById('errorPopup');
 const errorPopupMessage = document.getElementById('errorPopupMessage');
 const errorPopupClose = document.getElementById('errorPopupClose');
+const cameraStepTitle = document.querySelector('[data-camera-step-title]');
+const cameraGuidance = document.querySelector('[data-camera-guidance]');
 const uploadTestMode = new URLSearchParams(window.location.search).get('test_error') === '1';
 
 let currentStream = null;
 let videoDevices = [];
 let currentFacingMode = 'environment';
-let capturedBlob = null;
+let frontLabelBlob = null;
+let backLabelBlob = null;
 
 function updateStatus(message, isError = false) {
   //statusText.textContent = message;
@@ -28,7 +31,7 @@ function showErrorPopup(message) {
 
 function hideErrorPopup() {
   errorPopup.style.visibility = 'hidden';
-  window.location.href = '/camera';
+  window.location.href = `${window.location.pathname}${window.location.search}`;
 }
 
 function getUserMedia(constraints) {
@@ -119,13 +122,29 @@ async function initCamera() {
   }
 }
 
-async function finalizeImageUpload(blob, previewFilename) {
-  capturedBlob = blob;
+function setCaptureStep(isBackLabel) {
+  cameraStepTitle.textContent = isBackLabel ? 'Capture the back label' : 'Capture the front label';
+  cameraGuidance.textContent = isBackLabel
+    ? 'Turn the bottle around and capture the back label, including any details or barcode.'
+    : 'Centre the front label in the frame, then capture a clear photo.';
+  uploadButton.setAttribute('aria-label', isBackLabel ? 'Upload back label image' : 'Upload front label image');
+  captureButton.setAttribute('aria-label', isBackLabel ? 'Capture back label' : 'Capture front label');
+}
+
+async function finalizeLabelCapture(blob, previewFilename) {
+  if (!frontLabelBlob) {
+    frontLabelBlob = blob;
+    setCaptureStep(true);
+    updateStatus(previewFilename ? `Front label uploaded: ${previewFilename}. Now capture the back label.` : 'Front label captured. Now capture the back label.');
+    return;
+  }
+
+  backLabelBlob = blob;
 
   video.style.visibility = 'hidden';
 
   const postCaptureImage = document.getElementById('PostCaptureImage');
-  postCaptureImage.src = URL.createObjectURL(capturedBlob);
+  postCaptureImage.src = URL.createObjectURL(backLabelBlob);
   postCaptureImage.style.display = 'flex';
 
   const div = document.getElementById('overlayDiv');
@@ -134,10 +153,10 @@ async function finalizeImageUpload(blob, previewFilename) {
   captureButton.style.display = 'none';
   uploadButton.style.display = 'none';
   switchCameraButton.style.display = 'none';
-  updateStatus(previewFilename ? `Uploaded ${previewFilename}. Sending to server...` : 'Image selected. Sending to server...');
+  updateStatus(previewFilename ? `Back label uploaded: ${previewFilename}. Sending both labels to server...` : 'Back label captured. Sending both labels to server...');
   captureButton.disabled = true;
   uploadButton.disabled = true;
-  await sendPhoto();
+  await sendPhotos();
   captureButton.disabled = false;
   uploadButton.disabled = false;
 }
@@ -159,7 +178,7 @@ function capturePhoto() {
       return;
     }
 
-    await finalizeImageUpload(blob);
+    await finalizeLabelCapture(blob);
   }, 'image/png');
 }
 
@@ -169,19 +188,20 @@ async function handleUploadSelection() {
     return;
   }
 
-  await finalizeImageUpload(file, file.name);
+  await finalizeLabelCapture(file, file.name);
   uploadInput.value = '';
 }
 
-async function sendPhoto() {
-  if (!capturedBlob) {
-    updateStatus('No photo to send.', true);
-    showErrorPopup('No image was selected. Please try again.');
+async function sendPhotos() {
+  if (!frontLabelBlob || !backLabelBlob) {
+    updateStatus('Both label photos are required.', true);
+    showErrorPopup('Please capture both the front and back labels before continuing.');
     return;
   }
 
   const formData = new FormData();
-  formData.append('photo', capturedBlob, 'photo.png');
+  formData.append('photo-front', frontLabelBlob, 'front-label.png');
+  formData.append('photo-back', backLabelBlob, 'back-label.png');
 
   try {
     const uploadUrl = new URL('/upload-photo', window.location.origin);

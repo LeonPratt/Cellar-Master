@@ -42,6 +42,17 @@
     </section>
   </main>
 
+  <div class="popup-backdrop" data-delete-confirmation>
+    <div class="popup-card" role="dialog" aria-modal="true" aria-labelledby="delete-confirmation-title" aria-describedby="delete-confirmation-message">
+      <h2 id="delete-confirmation-title">Delete cellar?</h2>
+      <p id="delete-confirmation-message" data-delete-confirmation-message></p>
+      <div class="popup-actions">
+        <button type="button" data-delete-cancel>Cancel</button>
+        <button class="action-btn delete-btn" type="button" data-delete-confirm>Delete</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/scripts/cellars.js"></script>
 </body>
 </html>

@@ -116,8 +116,13 @@ def view_wine():
     return send_page("viewwine.html")
 
 
+@app.route("/add_remove")
+def add_remove_section():
+    return send_page("add_remove_selection.html")
+
 @app.route("/camera")
 def camera_page():
+    qry = request.args.get("qry", "")
     return send_page("camera.html")
 
 
@@ -357,24 +362,30 @@ def upload_photo():
         return jsonify({
             "message": "Test error: upload failed on purpose so you can verify the popup.",
         }), 500
-
-    if "photo" not in request.files:
+    print(request.files)
+    if "photo-front" not in request.files:
         return jsonify({"message": "No photo file provided."}), 400
 
-    photo = request.files["photo"]
-    if photo.filename == "":
-        return jsonify({"message": "No file name provided."}), 400
+    save_paths = []
+    frontsavename = ""
+    for pos in ["front","back"]:
+        photo = request.files[f"photo-{pos}"]
+        if photo.filename == "":
+            return jsonify({"message": "No file name provided."}), 400
 
-    filename = secure_filename(photo.filename) or "photo.png"
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    save_name = f"{timestamp}_{filename}"
-    save_path = UPLOAD_DIR / save_name
-    photo.save(save_path)
+        filename = secure_filename(photo.filename) or "photo.png"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        save_name = f"{timestamp}_{filename}"
+        if pos == "front":
+            frontsavename = save_name
+        save_path = UPLOAD_DIR / save_name
+        photo.save(save_path)
+        save_paths.append(save_path)
 
     try:
         conn = dbmanager.connect()
         known_wines = dbmanager.get_all_known_wines(conn)
-        details = infer_wine_details.infer_basic(save_path,known_wines, False, local=localInfer)
+        details = infer_wine_details.infer_basic(save_paths,known_wines, False, local=localInfer)
         conn.close()
     except Exception as e:
         print(e)
@@ -384,13 +395,13 @@ def upload_photo():
 
     return jsonify({
         "message": "Photo saved successfully.",
-        "filename": save_name.split(".png")[0],
+        "filename": frontsavename.split(".png")[0],
         "name": details["name"],
         "year": details["year"],
         "grape_variety": details["grape_variety"],
         "region": details["region"],
         "producer":details["producer"],
-        "imgpath": save_name
+        "imgpath": frontsavename
     })
 
 

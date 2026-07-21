@@ -3,14 +3,27 @@ const API_URL = "/wines";
 const wineList = document.querySelector(".wine-list");
 const searchBox = document.querySelector(".search-box");
 const inCellarOnly = document.querySelector(".in-cellar-only");
+const sortControl = document.querySelector(".wine-sort");
+const sortSelect = document.querySelector(".wine-sort-select");
+const sortMenu = document.querySelector(".wine-sort-menu");
+const sortLabel = document.querySelector("[data-sort-label]");
+const sortOptions = document.querySelectorAll("[data-sort-value]");
+const sortDirectionButton = document.querySelector(".sort-direction-btn");
 const homeButton = document.querySelector(".nav-btn");
 const logo = document.getElementById("home");
 const currentCellarBox = document.querySelector(".current-cellar");
+const wineDeleteConfirmation = document.querySelector("[data-wine-delete-confirmation]");
+const wineDeleteConfirmationMessage = document.querySelector("[data-wine-delete-confirmation-message]");
+const wineDeleteCancelButton = document.querySelector("[data-wine-delete-cancel]");
+const wineDeleteConfirmButton = document.querySelector("[data-wine-delete-confirm]");
 
 logo.addEventListener("click", () => {
     window.location.href = "/home";
 });
 let wines = [];
+let sortDirection = "asc";
+let sortField = "name";
+let winePendingDeletion = null;
 
 homeButton.addEventListener("click", () => {
     window.location.href = "/home";
@@ -85,13 +98,14 @@ async function fetchWines(searchterm = "", inCellarOnlyFlag = false) {
 
 function renderWines(wineArray) {
     wineList.innerHTML = "";
-    console.log("Rendering wines:", wineArray);
-    if (wineArray.length === 0) {
+    const sortedWines = sortWines(wineArray);
+    console.log("Rendering wines:", sortedWines);
+    if (sortedWines.length === 0) {
         renderMessage("No wines found");
         return;
     }
 
-    wineArray.forEach((wine) => {
+    sortedWines.forEach((wine) => {
         if (inCellarOnly.checked && (!wine.quantity || wine.quantity <= 0)) {
             return;
         }
@@ -128,8 +142,8 @@ function renderWines(wineArray) {
         }
         else{
         wineCard.querySelector(".delete-btn").addEventListener("click", () => {
-            removeWine(wine);
-            });
+            showWineDeleteConfirmation(wine);
+        });
         }
 
 
@@ -137,9 +151,77 @@ function renderWines(wineArray) {
     });
 }
 
+function sortWines(wineArray) {
+    const direction = sortDirection === "asc" ? 1 : -1;
+
+    return wineArray
+        .map((wine, index) => ({ wine, index }))
+        .sort((first, second) => {
+            const firstValue = first.wine[sortField];
+            const secondValue = second.wine[sortField];
+
+            if (sortField === "name") {
+                const comparison = String(firstValue || "").localeCompare(String(secondValue || ""), undefined, {
+                    sensitivity: "base",
+                    numeric: true,
+                });
+                return comparison * direction || first.index - second.index;
+            }
+
+            const firstNumber = Number.parseInt(firstValue, 10);
+            const secondNumber = Number.parseInt(secondValue, 10);
+            const firstIsUnknown = Number.isNaN(firstNumber);
+            const secondIsUnknown = Number.isNaN(secondNumber);
+
+            if (firstIsUnknown || secondIsUnknown) {
+                if (firstIsUnknown && secondIsUnknown) return first.index - second.index;
+                return firstIsUnknown ? 1 : -1;
+            }
+
+            return (firstNumber - secondNumber) * direction || first.index - second.index;
+        })
+        .map(({ wine }) => wine);
+}
+
+function toggleSortDirection() {
+    sortDirection = sortDirection === "asc" ? "desc" : "asc";
+    const isAscending = sortDirection === "asc";
+    sortDirectionButton.textContent = isAscending ? "Ascending" : "Descending";
+    sortDirectionButton.setAttribute("aria-label", `Sort ${sortDirection}`);
+    renderWines(wines);
+}
+
+function closeSortMenu() {
+    sortMenu.hidden = true;
+    sortSelect.setAttribute("aria-expanded", "false");
+}
+
+function applySelectedSort(event) {
+    const option = event.currentTarget;
+    sortField = option.dataset.sortValue;
+    sortLabel.textContent = option.textContent;
+    sortOptions.forEach((sortOption) => {
+        sortOption.setAttribute("aria-selected", String(sortOption === option));
+    });
+    closeSortMenu();
+    renderWines(wines);
+}
+
 async function searchWines() {
     const query = searchBox.value.toLowerCase().trim();
     filteredwines = await fetchWines(query, inCellarOnly.checked);
+}
+
+function showWineDeleteConfirmation(wine) {
+    winePendingDeletion = wine;
+    wineDeleteConfirmationMessage.textContent = `Are you sure you want to remove ${wine.name} from this cellar?`;
+    wineDeleteConfirmation.style.visibility = "visible";
+    wineDeleteConfirmButton.focus();
+}
+
+function hideWineDeleteConfirmation() {
+    wineDeleteConfirmation.style.visibility = "hidden";
+    winePendingDeletion = null;
 }
 
 async function removeWine(wine) {
@@ -173,5 +255,41 @@ async function removeWine(wine) {
 }
 searchBox.addEventListener("input", searchWines);
 inCellarOnly.addEventListener("change", searchWines);
+sortSelect.addEventListener("click", () => {
+    const isOpen = !sortMenu.hidden;
+    sortMenu.hidden = isOpen;
+    sortSelect.setAttribute("aria-expanded", String(!isOpen));
+});
+sortOptions.forEach((option) => option.addEventListener("click", applySelectedSort));
+document.addEventListener("click", (event) => {
+    if (!sortControl.contains(event.target)) {
+        closeSortMenu();
+    }
+});
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        closeSortMenu();
+    }
+    if (event.key === "Escape" && wineDeleteConfirmation.style.visibility === "visible") {
+        hideWineDeleteConfirmation();
+    }
+});
+sortDirectionButton.addEventListener("click", toggleSortDirection);
+
+wineDeleteCancelButton.addEventListener("click", hideWineDeleteConfirmation);
+wineDeleteConfirmButton.addEventListener("click", async () => {
+    if (!winePendingDeletion) {
+        return;
+    }
+
+    const wine = winePendingDeletion;
+    hideWineDeleteConfirmation();
+    await removeWine(wine);
+});
+wineDeleteConfirmation.addEventListener("click", (event) => {
+    if (event.target === wineDeleteConfirmation) {
+        hideWineDeleteConfirmation();
+    }
+});
 
 fetchWines();

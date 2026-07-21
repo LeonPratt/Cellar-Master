@@ -18,7 +18,7 @@ currentCellarBox.addEventListener("click",function(){
 })
 
 add_remove.addEventListener("click",function(){
-    window.location.href = "/camera"
+    window.location.href = "/add_remove"
 })
 
 

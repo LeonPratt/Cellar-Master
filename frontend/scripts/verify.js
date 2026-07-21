@@ -7,14 +7,25 @@ if (filename) {
   container.style.backgroundImage = `url(/uploads/${filename}.png)`;
 }
 
+
 document.querySelector('input[name="name"]').value = params.get("name") || "";
 document.querySelector('input[name="producer"]').value = params.get("producer") || "";
 console.log(params.get("producer"));
 document.querySelector('input[name="grape_variety"]').value = params.get("grape_variety") || "";
 document.querySelector('input[name="region"]').value = params.get("region") || "";
+const add_remove = params.get("qry") || "add";
+let confirmation_route = "/add-to-cellar";
+const confirmButton = document.getElementById("confirm");
+
+if (add_remove === "remove") {
+  confirmation_route = "/remove-from-cellar";
+  confirmButton.textContent = "Remove from cellar";
+} else {
+  confirmButton.textContent = "Add to cellar";
+}
 
 if(params.get("year") == "0"){
-  document.querySelector('input[name="year"]').value = "Year unknown";
+  document.querySelector('input[name="year"]').value = "";
 }
 else{
   document.querySelector('input[name="year"]').value = params.get("year") || "";
@@ -32,7 +43,7 @@ function getFormData() {
   return Object.fromEntries(new FormData(form));
 }
 
-document.getElementById("add").addEventListener("click", async (e) => {
+confirmButton.addEventListener("click", async (e) => {
   e.preventDefault();
   let data = getFormData();
   const cellar = loadCurrentCellar();
@@ -43,7 +54,8 @@ document.getElementById("add").addEventListener("click", async (e) => {
   data.imgpath = params.get("img");
   console.log("data: " + JSON.stringify(data));
   data.cellar = cellar;
-  const res = await fetch(`/add-to-cellar?c=${encodeURIComponent(cellar)}`, {
+  console.log()
+  const res = await fetch(`${confirmation_route}?c=${encodeURIComponent(cellar)}`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify(data)
@@ -57,23 +69,3 @@ document.getElementById("add").addEventListener("click", async (e) => {
 
   window.location.href = ("/home")
   });
-
-document.getElementById("remove").addEventListener("click", async (e) => {
-  e.preventDefault();
-  const data = getFormData();
-  const cellar = loadCurrentCellar();
-  if (!cellar) {
-    window.location.href = "/";
-    return;
-  }
-  data.cellar = cellar;
-  const res = await fetch(`/remove-from-cellar?c=${encodeURIComponent(cellar)}`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(data)
-  });
-
-  console.log(await res.json());
-  window.location.href = ("/home")
-
-});

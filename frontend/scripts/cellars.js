@@ -4,6 +4,11 @@ const createForm = document.querySelector("[data-create-form]");
 const cellarNameInput = document.querySelector("#cellar-name");
 const cancelButton = document.querySelector("[data-cancel-button]");
 const status = document.querySelector("[data-status]");
+const deleteConfirmation = document.querySelector("[data-delete-confirmation]");
+const deleteConfirmationMessage = document.querySelector("[data-delete-confirmation-message]");
+const deleteCancelButton = document.querySelector("[data-delete-cancel]");
+const deleteConfirmButton = document.querySelector("[data-delete-confirm]");
+let cellarPendingDeletion = null;
 
 async function loadCellars() {
     try {
@@ -70,6 +75,20 @@ async function removeCellar(id, name){
   }
 }
 
+function showDeleteConfirmation(id, name) {
+  cellarPendingDeletion = { id, name };
+  deleteConfirmationMessage.textContent = `Are you sure you want to delete ${name}? This cannot be undone.`;
+  deleteConfirmation.hidden = false;
+  deleteConfirmation.style.visibility = "visible";
+  deleteConfirmButton.focus();
+}
+
+function hideDeleteConfirmation() {
+  deleteConfirmation.style.visibility = "hidden";
+  deleteConfirmation.hidden = true;
+  cellarPendingDeletion = null;
+}
+
 function setStatus(message) {
   status.textContent = message;
 }
@@ -119,7 +138,7 @@ function renderCellars(cellars) {
     removeButton.className = "action-btn delete-btn";
     removeButton.type = "button";
     removeButton.textContent = "Remove";
-    removeButton.addEventListener("click", () => removeCellar(cellar.cellarid, cellar.name));
+    removeButton.addEventListener("click", () => showDeleteConfirmation(cellar.cellarid, cellar.name));
 
 
     const buttonDiv = document.createElement("div");
@@ -145,6 +164,29 @@ function hideCreateForm() {
 
 createButton.addEventListener("click", showCreateForm);
 cancelButton.addEventListener("click", hideCreateForm);
+
+deleteCancelButton.addEventListener("click", hideDeleteConfirmation);
+deleteConfirmButton.addEventListener("click", async () => {
+  if (!cellarPendingDeletion) {
+    return;
+  }
+
+  const { id, name } = cellarPendingDeletion;
+  hideDeleteConfirmation();
+  await removeCellar(id, name);
+});
+
+deleteConfirmation.addEventListener("click", (event) => {
+  if (event.target === deleteConfirmation) {
+    hideDeleteConfirmation();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !deleteConfirmation.hidden) {
+    hideDeleteConfirmation();
+  }
+});
 
 createForm.addEventListener("submit", async (event) => {
   event.preventDefault();

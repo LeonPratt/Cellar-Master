@@ -501,7 +501,7 @@ def search_wines_by_pairing(conn, pairing, cellarname, limit=20):
     LIMIT ?
     """
 
-    cursor.execute(query, (search, limit))
+    cursor.execute(query, (cellarid, search, limit))
     rows = cursor.fetchall()
 
     wines = []
@@ -564,7 +564,9 @@ def search_wines(conn, cellarname, search_term="", limit=10, in_cellar_only=True
             w.year,
             w.region,
             COALESCE(c.quantity, 0) AS quantity,
-            GROUP_CONCAT(DISTINCT g.name) AS grapes
+            GROUP_CONCAT(DISTINCT g.name) AS grapes,
+            dw.start_year,
+            dw.end_year
         FROM WINES w
 
         {cellar_join}
@@ -574,6 +576,9 @@ def search_wines(conn, cellarname, search_term="", limit=10, in_cellar_only=True
 
         LEFT JOIN GRAPES g 
             ON wg.grapeid = g.grapeid
+
+        LEFT JOIN drinking_windows dw
+            ON w.wineid = dw.wineid
 
         WHERE
             c.quantity > 0 OR ?
@@ -603,7 +608,9 @@ def search_wines(conn, cellarname, search_term="", limit=10, in_cellar_only=True
             w.year,
             w.region,
             COALESCE(c.quantity, 0) AS quantity,
-            GROUP_CONCAT(DISTINCT g.name) AS grapes
+            GROUP_CONCAT(DISTINCT g.name) AS grapes,
+            dw.start_year,
+            dw.end_year
 
         FROM WINES w
 
@@ -614,6 +621,9 @@ def search_wines(conn, cellarname, search_term="", limit=10, in_cellar_only=True
 
         LEFT JOIN GRAPES g 
             ON wg.grapeid = g.grapeid
+
+        LEFT JOIN drinking_windows dw
+            ON w.wineid = dw.wineid
 
         WHERE
             (
@@ -661,7 +671,9 @@ def search_wines(conn, cellarname, search_term="", limit=10, in_cellar_only=True
             "year": row[2],
             "region": row[3],
             "quantity": row[4] or 0,
-            "grapes": row[5].split(",") if row[5] else []
+            "grapes": row[5].split(",") if row[5] else [],
+            "drink_window_start": row[6],
+            "drink_window_end": row[7],
         })
 
     return wines
