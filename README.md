@@ -1,3 +1,6 @@
+# Notice
+This is the public repository for Cellar Master that contains commits up until 22/07/2026.
+
 # Cellar Master
 
 CellarMaster is a wine cellar tracking app that makes it easy to keep track of the bottles you own, discover pairings, and store details about each wine. The app automatically extracts tasting notes, food pairing ideas and optimal drinking windows.
